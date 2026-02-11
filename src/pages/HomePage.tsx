@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
-import { useLocation } from 'react-router-dom';
+import { useLocation, Link } from 'react-router-dom';
 import { MediaCard } from '@/components/media/MediaCard';
 import { Play, Info, ArrowLeft, ArrowRight } from 'lucide-react';
 import { getImageUrl, getTrending, getDiscover } from '@/services/tmdb';
@@ -168,12 +168,18 @@ export function HomePage() {
                             </p>
 
                             <div className="flex items-center gap-4 mt-2 animate-in slide-in-from-left-8 duration-700 delay-300">
-                                <button className="bg-white text-brand-secondary px-8 py-3 rounded-full font-bold flex items-center gap-2 hover:bg-accent hover:text-brand-secondary transition-all transform hover:scale-105 shadow-xl">
+                                <Link
+                                    to={`/watch/${featured.media_type || (location.pathname === '/tv' ? 'tv' : 'movie')}/${featured.id}`}
+                                    className="bg-white text-brand-secondary px-8 py-3 rounded-full font-bold flex items-center gap-2 hover:bg-accent hover:text-brand-secondary transition-all transform hover:scale-105 shadow-xl"
+                                >
                                     <Play fill="currentColor" size={20} /> Play Now
-                                </button>
-                                <button className="bg-white/10 backdrop-blur-md text-white px-8 py-3 rounded-full font-bold flex items-center gap-2 hover:bg-white/20 transition-all">
+                                </Link>
+                                <Link
+                                    to={`/watch/${featured.media_type || (location.pathname === '/tv' ? 'tv' : 'movie')}/${featured.id}`}
+                                    className="bg-white/10 backdrop-blur-md text-white px-8 py-3 rounded-full font-bold flex items-center gap-2 hover:bg-white/20 transition-all"
+                                >
                                     <Info size={20} /> More Info
-                                </button>
+                                </Link>
                             </div>
                         </div>
                     </div>
