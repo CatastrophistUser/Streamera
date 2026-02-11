@@ -1,7 +1,7 @@
 import { useParams, useSearchParams, Link } from 'react-router-dom';
 import { getEmbedUrl, getMediaDetails, getSeasonDetails, getSimilar, getCredits, getImageUrl } from '@/services/tmdb';
 import { useState, useEffect, useRef } from 'react';
-import { Star, Clock, RefreshCw, Users, ChevronDown, Check } from 'lucide-react';
+import { RefreshCw, ChevronDown, Check } from 'lucide-react';
 import { cn } from '@/utils/cn';
 
 const SOURCES = [
