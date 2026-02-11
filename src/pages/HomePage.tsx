@@ -39,11 +39,15 @@ export function HomePage() {
 
         const fetchInitial = async () => {
             try {
+                // Fetch from a random page (1-5) for variety
+                const randomPage = Math.floor(Math.random() * 5) + 1;
                 const data = type === 'all'
-                    ? await getTrending('all', 1)
-                    : await getDiscover(type as 'movie' | 'tv', 1);
+                    ? await getTrending('all', randomPage)
+                    : await getDiscover(type as 'movie' | 'tv', randomPage);
 
-                setItems(data);
+                // Shuffle the initial list
+                const shuffled = [...data].sort(() => Math.random() - 0.5);
+                setItems(shuffled);
                 setLoading(false);
             } catch (error) {
                 console.error(error);

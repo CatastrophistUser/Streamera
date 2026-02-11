@@ -66,8 +66,25 @@ export const getEmbedUrl = (
     id: string,
     season?: number,
     episode?: number,
-    source: string = 'vidsrc.dev'
+    source: string = 'vidsrc.xyz'
 ) => {
+    if (source.includes('multiembed')) {
+        const baseUrl = `https://multiembed.mov?video_id=${id}&tmdb=1`;
+        return type === 'movie' ? baseUrl : `${baseUrl}&s=${season || 1}&e=${episode || 1}`;
+    }
+
+    if (source.includes('vidlink')) {
+        return type === 'movie'
+            ? `https://vidlink.pro/movie/${id}`
+            : `https://vidlink.pro/tv/${id}/${season || 1}/${episode || 1}`;
+    }
+
+    if (source.includes('superembed')) {
+        return type === 'movie'
+            ? `https://superembed.stream/movie/${id}`
+            : `https://superembed.stream/tv/${id}/${season || 1}/${episode || 1}`;
+    }
+
     if (type === 'movie') {
         return `https://${source}/embed/movie/${id}`;
     }
