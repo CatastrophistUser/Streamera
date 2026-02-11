@@ -38,7 +38,7 @@ export function MediaCard({ item, className }: MediaCardProps) {
                 {/* Rating Badge */}
                 <div className="absolute top-3 right-3 bg-black/80 backdrop-blur-md px-2 py-1 rounded-lg text-[10px] font-black flex items-center gap-1 border border-white/10 text-white shadow-2xl">
                     <Star size={10} className="text-accent fill-accent" />
-                    {item.vote_average.toFixed(1)}
+                    {item.vote_average?.toFixed(1) || '0.0'}
                 </div>
             </div>
 

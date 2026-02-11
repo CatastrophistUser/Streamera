@@ -119,7 +119,7 @@ export function SpotlightSearch({ isOpen, onClose }: SpotlightSearchProps) {
                                     </div>
                                     <div className="absolute top-3 right-3 px-2 py-1 bg-black/60 backdrop-blur-md rounded-lg border border-white/10 flex items-center gap-1">
                                         <Star size={10} className="text-accent fill-accent" />
-                                        <span className="text-[10px] font-black text-white">{item.vote_average.toFixed(1)}</span>
+                                        <span className="text-[10px] font-black text-white">{item.vote_average?.toFixed(1) || '0.0'}</span>
                                     </div>
                                 </div>
                                 <div className="px-1">

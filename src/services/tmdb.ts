@@ -35,7 +35,7 @@ export const searchMedia = async (query: string): Promise<Media[]> => {
     const { data } = await tmdbApi.get<TMDBResponse<Media>>('/search/multi', {
         params: { query },
     });
-    return data.results;
+    return data.results.filter(item => item.media_type === 'movie' || item.media_type === 'tv');
 };
 
 export const getMediaDetails = async (type: 'movie' | 'tv', id: string) => {
