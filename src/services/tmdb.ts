@@ -31,9 +31,9 @@ export const getDiscover = async (type: 'movie' | 'tv', page: number = 1): Promi
     return data.results;
 };
 
-export const searchMedia = async (query: string): Promise<Media[]> => {
+export const searchMedia = async (query: string, page: number = 1): Promise<Media[]> => {
     const { data } = await tmdbApi.get<TMDBResponse<Media>>('/search/multi', {
-        params: { query },
+        params: { query, page },
     });
     return data.results.filter(item => item.media_type === 'movie' || item.media_type === 'tv');
 };

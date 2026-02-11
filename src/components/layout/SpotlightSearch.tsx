@@ -40,7 +40,7 @@ export function SpotlightSearch({ isOpen, onClose }: SpotlightSearchProps) {
         if (debouncedQuery.trim()) {
             setLoading(true);
             searchMedia(debouncedQuery).then((res) => {
-                setResults(res.slice(0, 10)); // Top 10 results for the 5x2 grid
+                setResults(res.slice(0, 30)); // Show up to 30 results with scrolling
                 setLoading(false);
             });
         } else {
@@ -99,6 +99,7 @@ export function SpotlightSearch({ isOpen, onClose }: SpotlightSearchProps) {
                     <div className="grid grid-cols-2 md:grid-cols-5 gap-6 animate-in slide-in-from-top-4 duration-500">
                         {results.map((item) => (
                             <button
+                                type="button"
                                 key={item.id}
                                 onClick={() => {
                                     navigate(`/watch/${item.media_type}/${item.id}`);

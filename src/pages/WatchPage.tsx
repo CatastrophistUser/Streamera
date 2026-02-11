@@ -152,7 +152,7 @@ export function WatchPage() {
                                         isIframeLoading ? "opacity-0" : "opacity-100"
                                     )}
                                     allowFullScreen
-                                    allow="autoplay; encrypted-media; picture-in-picture; fullscreen"
+                                    allow="autoplay; encrypted-media; picture-in-picture; fullscreen *"
                                     frameBorder="0"
                                     scrolling="no"
                                     title="Video Player"
