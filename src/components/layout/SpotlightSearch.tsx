@@ -48,18 +48,29 @@ export function SpotlightSearch({ isOpen, onClose }: SpotlightSearchProps) {
         }
     }, [debouncedQuery]);
 
+    const handleSearchSubmit = (e: React.FormEvent) => {
+        e.preventDefault();
+        if (query.trim()) {
+            navigate(`/search?q=${encodeURIComponent(query)}`);
+            onClose();
+        }
+    };
+
     if (!isOpen) return null;
 
     return (
-        <div className="fixed inset-0 z-[100] flex flex-col items-center pt-[15vh] px-4 animate-in fade-in duration-300">
+        <div className="fixed inset-0 z-[100] flex flex-col items-center pt-[10vh] px-4 animate-in fade-in duration-300 overflow-y-auto custom-scrollbar-hidden">
             {/* Backdrop */}
             <div
-                className="absolute inset-0 bg-brand-secondary/95 backdrop-blur-3xl"
+                className="fixed inset-0 bg-brand-secondary/95 backdrop-blur-3xl"
                 onClick={onClose}
             />
 
             {/* Search Container */}
-            <div className="relative w-full max-w-4xl space-y-6 animate-in zoom-in-95 duration-300">
+            <form
+                onSubmit={handleSearchSubmit}
+                className="relative w-full max-w-4xl space-y-6 animate-in zoom-in-95 duration-300 pb-20"
+            >
                 <div className="relative group">
                     <Search className="absolute left-5 top-1/2 -translate-y-1/2 text-white/20 group-focus-within:text-accent transition-colors" size={20} />
                     <input
@@ -71,6 +82,7 @@ export function SpotlightSearch({ isOpen, onClose }: SpotlightSearchProps) {
                         onChange={(e) => setQuery(e.target.value)}
                     />
                     <button
+                        type="button"
                         onClick={onClose}
                         className="absolute right-4 top-1/2 -translate-y-1/2 p-1.5 hover:bg-white/10 rounded-full transition-colors text-white/20 hover:text-white"
                     >
@@ -124,7 +136,7 @@ export function SpotlightSearch({ isOpen, onClose }: SpotlightSearchProps) {
                         ))}
                     </div>
                 )}
-            </div>
+            </form>
         </div>
     );
 }
