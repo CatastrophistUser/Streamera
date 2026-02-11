@@ -5,10 +5,13 @@ import { RefreshCw, ChevronDown, Check } from 'lucide-react';
 import { cn } from '@/utils/cn';
 
 const SOURCES = [
+    { name: 'Server Pro', id: 'vidsrc.pro' },
     { name: 'Ultra', id: 'vidsrc.xyz' },
     { name: 'Direct', id: 'vidsrc.icu' },
     { name: 'Fast', id: 'vidsrc.cc' },
+    { name: 'Multi', id: 'vidsrc.in' },
     { name: 'Stable', id: 'vidsrc.me' },
+    { name: 'Classic', id: 'vidsrc.pm' },
     { name: 'Legacy', id: 'vidsrc.to' },
 ];
 
