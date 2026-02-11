@@ -13,7 +13,7 @@ export function SpotlightSearch({ isOpen, onClose }: SpotlightSearchProps) {
     const [query, setQuery] = useState('');
     const [results, setResults] = useState<any[]>([]);
     const [loading, setLoading] = useState(false);
-    const debouncedQuery = useDebounce(query, 500);
+    const debouncedQuery = useDebounce(query, 300);
     const inputRef = useRef<HTMLInputElement>(null);
     const navigate = useNavigate();
 
@@ -65,7 +65,7 @@ export function SpotlightSearch({ isOpen, onClose }: SpotlightSearchProps) {
                     <input
                         ref={inputRef}
                         type="text"
-                        placeholder="Search for movies, TV shows, actors..."
+                        placeholder="Search... (Ctrl + K)"
                         className="w-full bg-white/[0.03] border border-white/10 rounded-2xl py-4 pl-14 pr-12 text-base font-black italic tracking-tighter text-white focus:outline-none focus:border-accent/40 focus:ring-4 focus:ring-accent/5 transition-all placeholder:text-white/5 shadow-2xl"
                         value={query}
                         onChange={(e) => setQuery(e.target.value)}

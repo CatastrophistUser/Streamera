@@ -5,9 +5,11 @@ import { RefreshCw, ChevronDown, Check } from 'lucide-react';
 import { cn } from '@/utils/cn';
 
 const SOURCES = [
-    { name: 'Server 1', id: 'vidsrc.to' },
-    { name: 'Server 2', id: 'vidsrc.me' },
-    { name: 'Server 3', id: 'vidsrc.dev' },
+    { name: 'Ultra', id: 'vidsrc.xyz' },
+    { name: 'Direct', id: 'vidsrc.icu' },
+    { name: 'Fast', id: 'vidsrc.cc' },
+    { name: 'Stable', id: 'vidsrc.me' },
+    { name: 'Legacy', id: 'vidsrc.to' },
 ];
 
 export function WatchPage() {
@@ -17,6 +19,7 @@ export function WatchPage() {
     const season = parseInt(searchParams.get('s') || '1');
     const episode = parseInt(searchParams.get('e') || '1');
     const [activeSource, setActiveSource] = useState(SOURCES[0].id);
+    const [isIframeLoading, setIsIframeLoading] = useState(true);
 
     const [details, setDetails] = useState<any>(null);
     const [seasonData, setSeasonData] = useState<any>(null);
@@ -70,6 +73,10 @@ export function WatchPage() {
         setSearchParams({ s: s.toString(), e: e.toString() });
         setIsDropdownOpen(false);
     };
+
+    useEffect(() => {
+        setIsIframeLoading(true);
+    }, [activeSource, season, episode]);
 
     if (loading) {
         return (
@@ -130,10 +137,20 @@ export function WatchPage() {
                     <div className="lg:col-span-3 space-y-8">
                         <div className="group relative">
                             <div className="relative aspect-video w-full overflow-hidden rounded-[2.5rem] bg-black shadow-2xl border border-white/5">
+                                {isIframeLoading && (
+                                    <div className="absolute inset-0 z-10 flex flex-col items-center justify-center bg-black gap-4">
+                                        <div className="w-12 h-12 border-4 border-accent/20 border-t-accent rounded-full animate-spin" />
+                                        <p className="text-[10px] font-black uppercase tracking-[0.3em] text-white/20 animate-pulse">Initializing Secure Stream...</p>
+                                    </div>
+                                )}
                                 <iframe
                                     key={playerKey + activeSource + episode + season}
                                     src={embedUrl}
-                                    className="h-full w-full"
+                                    onLoad={() => setIsIframeLoading(false)}
+                                    className={cn(
+                                        "h-full w-full transition-opacity duration-1000",
+                                        isIframeLoading ? "opacity-0" : "opacity-100"
+                                    )}
                                     allowFullScreen
                                     allow="autoplay; encrypted-media; picture-in-picture; fullscreen"
                                     frameBorder="0"

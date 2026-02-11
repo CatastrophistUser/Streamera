@@ -104,7 +104,18 @@ export function HomePage() {
         }, 10000);
 
         return () => clearInterval(timer);
-    }, [handleNext, loading, items.length, carouselIndex]); // carouselIndex resets timer on manual click
+    }, [handleNext, loading, items.length, carouselIndex]);
+
+    // Preload Next Image
+    useEffect(() => {
+        if (items.length > 0 && carouselIndex < items.length - 1) {
+            const nextItem = items[carouselIndex + 1];
+            if (nextItem?.backdrop_path) {
+                const img = new Image();
+                img.src = getImageUrl(nextItem.backdrop_path, 'w1280') || '';
+            }
+        }
+    }, [carouselIndex, items]);
 
     if (loading) {
         return (
@@ -129,7 +140,7 @@ export function HomePage() {
                 <section className="relative h-screen w-full overflow-hidden">
                     <div className="absolute inset-0">
                         <img
-                            src={getImageUrl(featured.backdrop_path, 'original') || ''}
+                            src={getImageUrl(featured.backdrop_path, 'w1280') || ''}
                             alt=""
                             key={featured.id}
                             className="h-full w-full object-cover animate-in fade-in zoom-in-105 duration-1000"

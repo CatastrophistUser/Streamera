@@ -58,7 +58,7 @@ export const getCredits = async (type: 'movie' | 'tv', id: string) => {
     return data;
 };
 
-export const getImageUrl = (path: string, size: 'w500' | 'original' = 'w500') =>
+export const getImageUrl = (path: string, size: 'w300' | 'w780' | 'w1280' | 'original' = 'w300') =>
     path ? `${IMAGE_BASE_URL}/${size}${path}` : null;
 
 export const getEmbedUrl = (
