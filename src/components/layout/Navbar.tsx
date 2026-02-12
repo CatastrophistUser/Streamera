@@ -73,7 +73,7 @@ export function Navbar() {
         <>
             {/* Logo Container */}
             <div className={cn(
-                "fixed top-4 md:top-6 left-4 md:left-10 z-[60] transition-opacity duration-500 flex items-center h-[52px] md:h-[60px]",
+                "fixed top-4 md:top-6 left-4 md:left-10 z-[60] transition-opacity duration-500 hidden md:flex items-center h-[52px] md:h-[60px]",
                 isLightsOff ? "opacity-20 pointer-events-none" : "opacity-100"
             )}>
                 <Link to="/" className="text-accent transform hover:scale-105 transition-transform block">

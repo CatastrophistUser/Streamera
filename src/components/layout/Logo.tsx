@@ -20,7 +20,7 @@ export function Logo({ className, animate = false, show = true, type = 'fade' }:
                 !show && !animate && "opacity-0"
             )}
         >
-            <img src={logoUrl} alt="Streamera" className="h-4 w-auto block" />
+            <img src={logoUrl} alt="Streamera" className="h-8 md:h-4 w-auto block" />
         </div>
     );
 }
