@@ -152,44 +152,44 @@ export function HomePage() {
                         <div className="absolute inset-0 bg-brand-secondary/60" />
                     </div>
 
-                    <div className="absolute bottom-1/4 left-0 w-full z-10">
-                        <div className="max-w-7xl mx-auto px-4 flex flex-col gap-6">
-                            <h1 className="text-4xl md:text-7xl font-black max-w-3xl leading-tight text-white italic tracking-tighter animate-in slide-in-from-left-8 duration-700">
+                    <div className="absolute bottom-[15%] md:bottom-1/4 left-0 w-full z-10 px-4 md:px-0">
+                        <div className="max-w-7xl mx-auto flex flex-col gap-4 md:gap-6">
+                            <h1 className="text-3xl md:text-7xl font-black max-w-3xl leading-tight text-white italic tracking-tighter animate-in slide-in-from-left-8 duration-700">
                                 {'title' in featured ? featured.title : featured.name}
                             </h1>
 
                             <div className="flex items-center gap-3 animate-in slide-in-from-left-8 duration-700 delay-100">
-                                <span className="bg-accent text-brand-secondary text-[10px] font-black px-2 py-0.5 rounded uppercase tracking-widest">
+                                <span className="bg-accent text-brand-secondary text-[9px] md:text-[10px] font-black px-2 py-0.5 rounded uppercase tracking-widest">
                                     {type === 'all' ? (featured.media_type || 'trending') : type}
                                 </span>
-                                <span className="text-white/60 text-sm font-black italic">
+                                <span className="text-white/60 text-xs md:text-sm font-black italic">
                                     {('release_date' in featured ? featured.release_date : featured.first_air_date)?.split('-')[0]}
                                 </span>
                             </div>
 
-                            <p className="text-white/60 text-base md:text-lg max-w-xl line-clamp-3 leading-relaxed font-medium animate-in slide-in-from-left-8 duration-700 delay-200">
+                            <p className="text-white/60 text-sm md:text-lg max-w-xl line-clamp-2 md:line-clamp-3 leading-relaxed font-medium animate-in slide-in-from-left-8 duration-700 delay-200">
                                 {featured.overview}
                             </p>
 
-                            <div className="flex items-center gap-4 mt-2 animate-in slide-in-from-left-8 duration-700 delay-300">
+                            <div className="flex flex-row items-center gap-4 mt-2 animate-in slide-in-from-left-8 duration-700 delay-300">
                                 <Link
                                     to={`/watch/${featured.media_type || (location.pathname === '/tv' ? 'tv' : 'movie')}/${featured.id}`}
-                                    className="bg-white text-brand-secondary px-8 py-3 rounded-full font-bold flex items-center gap-2 hover:bg-accent hover:text-brand-secondary transition-all transform hover:scale-105 shadow-xl"
+                                    className="bg-white text-brand-secondary px-6 md:px-8 py-2.5 md:py-3 rounded-xl md:rounded-full text-xs md:text-base font-bold flex items-center gap-2 hover:bg-accent hover:text-brand-secondary transition-all transform hover:scale-105 shadow-xl"
                                 >
-                                    <Play fill="currentColor" size={20} /> Play Now
+                                    <Play fill="currentColor" size={18} /> Play Now
                                 </Link>
                                 <Link
                                     to={`/watch/${featured.media_type || (location.pathname === '/tv' ? 'tv' : 'movie')}/${featured.id}`}
-                                    className="bg-white/10 backdrop-blur-md text-white px-8 py-3 rounded-full font-bold flex items-center gap-2 hover:bg-white/20 transition-all"
+                                    className="bg-white/10 backdrop-blur-md text-white px-6 md:px-8 py-2.5 md:py-3 rounded-xl md:rounded-full text-xs md:text-base font-bold flex items-center gap-2 hover:bg-white/20 transition-all"
                                 >
-                                    <Info size={20} /> More Info
+                                    <Info size={18} /> Details
                                 </Link>
                             </div>
                         </div>
                     </div>
 
                     {/* Carousel Controls */}
-                    <div className="absolute bottom-12 right-12 z-20 flex items-center gap-2">
+                    <div className="absolute bottom-6 md:bottom-12 right-4 md:right-12 z-20 flex items-center gap-2">
                         {/* Progress Ring (Background) */}
                         <div className="absolute inset-0 -m-1 pointer-events-none">
                             <svg className="w-full h-full transform -rotate-90">
@@ -207,20 +207,20 @@ export function HomePage() {
                             onClick={handlePrev}
                             disabled={carouselIndex === 0}
                             className={cn(
-                                "p-5 rounded-full backdrop-blur-3xl border border-white/10 transition-all group relative overflow-hidden",
+                                "p-3 md:p-5 rounded-full backdrop-blur-3xl border border-white/10 transition-all group relative overflow-hidden",
                                 carouselIndex === 0
                                     ? "opacity-10 cursor-not-allowed bg-white/5"
                                     : "bg-white/[0.03] text-white/40 hover:text-accent hover:border-accent/40 active:scale-90"
                             )}
                         >
-                            <ArrowLeft size={20} />
+                            <ArrowLeft className="w-4 h-4 md:w-5 md:h-5" />
                         </button>
 
                         <button
                             onClick={handleNext}
-                            className="p-5 rounded-full bg-white/[0.03] backdrop-blur-3xl border border-white/10 text-white/40 hover:text-accent hover:border-accent/40 transition-all group relative overflow-hidden active:scale-90"
+                            className="p-3 md:p-5 rounded-full bg-white/[0.03] backdrop-blur-3xl border border-white/10 text-white/40 hover:text-accent hover:border-accent/40 transition-all group relative overflow-hidden active:scale-90"
                         >
-                            <ArrowRight size={20} />
+                            <ArrowRight className="w-4 h-4 md:w-5 md:h-5" />
                             {/* Visual Progress Bar on the "Next" button circle */}
                             <div className="absolute bottom-0 left-0 h-1 bg-accent/40 animate-[grow_10s_linear_infinite]" />
                         </button>

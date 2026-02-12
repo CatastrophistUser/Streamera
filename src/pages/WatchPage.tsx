@@ -1,8 +1,9 @@
-import { useParams, useSearchParams, Link } from 'react-router-dom';
+import { useParams, useSearchParams, Link, useNavigate } from 'react-router-dom';
 import { getEmbedUrl, getMediaDetails, getSeasonDetails, getSimilar, getCredits, getImageUrl } from '@/services/tmdb';
 import { useState, useEffect, useRef } from 'react';
 import { RefreshCw, ChevronDown, Check } from 'lucide-react';
 import { cn } from '@/utils/cn';
+import { useLightsOff } from '@/context/LightsContext';
 
 const SOURCES = [
     { name: 'Server VIP', id: 'vidlink.pro' },
@@ -18,6 +19,9 @@ const SOURCES = [
 export function WatchPage() {
     const { type, id } = useParams<{ type: 'movie' | 'tv'; id: string }>();
     const [searchParams, setSearchParams] = useSearchParams();
+    const { isLightsOff, setLightsOff } = useLightsOff();
+    const navigate = useNavigate();
+    const dropdownRef = useRef<HTMLDivElement>(null);
 
     const season = parseInt(searchParams.get('s') || '1');
     const episode = parseInt(searchParams.get('e') || '1');
@@ -32,7 +36,10 @@ export function WatchPage() {
     const [episodesLoading, setEpisodesLoading] = useState(false);
     const [playerKey, setPlayerKey] = useState(0);
     const [isDropdownOpen, setIsDropdownOpen] = useState(false);
-    const dropdownRef = useRef<HTMLDivElement>(null);
+
+    useEffect(() => {
+        return () => setLightsOff(false);
+    }, [setLightsOff]);
 
     useEffect(() => {
         if (type && id) {
@@ -77,6 +84,11 @@ export function WatchPage() {
         setIsDropdownOpen(false);
     };
 
+    const handleGenreClick = (genreId: number, genreName: string) => {
+        if (!type) return;
+        navigate(`/search?gid=${genreId}&gn=${encodeURIComponent(genreName)}&type=${type}`);
+    };
+
     useEffect(() => {
         setIsIframeLoading(true);
     }, [activeSource, season, episode]);
@@ -97,41 +109,43 @@ export function WatchPage() {
             <div className="max-w-7xl mx-auto px-4 py-8 flex flex-col gap-6">
 
                 {/* Header Section */}
-                <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 border-b border-white/5 pb-8">
-                    <div className="space-y-3">
-                        <h1 className="text-4xl md:text-5xl font-black tracking-tighter italic leading-none text-white">
+                <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 md:gap-6 border-b border-white/5 pb-6 md:pb-8">
+                    <div className="space-y-2 md:space-y-3 px-2 md:px-0">
+                        <h1 className="text-2xl md:text-5xl font-black tracking-tighter italic leading-none text-white">
                             {details?.title || details?.name}
                         </h1>
-                        <div className="flex items-center gap-3 text-[10px] font-black uppercase tracking-[0.2em]">
+                        <div className="flex flex-wrap items-center gap-2 md:gap-3 text-[9px] md:text-[10px] font-black uppercase tracking-[0.2em]">
                             <span className="text-accent bg-accent/10 px-2 py-1 rounded border border-accent/20">{type}</span>
                             <span className="text-white/20">/</span>
                             <span className="text-white/60 font-black">{runtime}</span>
-                            <span className="text-white/20">/</span>
+                            <span className="text-white/20 invisible md:visible">/</span>
                             <span className="text-white/40">{releaseYear}</span>
                             {type === 'tv' && (
                                 <>
-                                    <span className="text-white/20">/</span>
+                                    <span className="text-white/20 invisible md:visible">/</span>
                                     <span className="text-accent px-2 py-1 rounded bg-accent/5">S{season} E{episode}</span>
                                 </>
                             )}
                         </div>
                     </div>
 
-                    <div className="flex items-center gap-2 p-1.5 bg-black rounded-2xl border border-white/5 w-fit shadow-2xl">
-                        {SOURCES.map((src) => (
-                            <button
-                                key={src.id}
-                                onClick={() => setActiveSource(src.id)}
-                                className={cn(
-                                    "px-5 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all",
-                                    activeSource === src.id
-                                        ? "bg-accent text-brand-secondary shadow-lg shadow-accent/20"
-                                        : "text-white/20 hover:text-white"
-                                )}
-                            >
-                                {src.name}
-                            </button>
-                        ))}
+                    <div className="flex items-center gap-2 p-1 bg-black rounded-2xl border border-white/5 w-full md:w-fit shadow-2xl overflow-x-auto custom-scrollbar-hidden">
+                        <div className="flex items-center gap-2 min-w-max px-1 md:px-0">
+                            {SOURCES.map((src) => (
+                                <button
+                                    key={src.id}
+                                    onClick={() => setActiveSource(src.id)}
+                                    className={cn(
+                                        "px-4 md:px-5 py-2 rounded-xl text-[9px] md:text-[10px] font-black uppercase tracking-widest transition-all",
+                                        activeSource === src.id
+                                            ? "bg-accent text-brand-secondary shadow-lg shadow-accent/20"
+                                            : "text-white/20 hover:text-white"
+                                    )}
+                                >
+                                    {src.name}
+                                </button>
+                            ))}
+                        </div>
                     </div>
                 </div>
 
@@ -139,7 +153,10 @@ export function WatchPage() {
 
                     <div className="lg:col-span-3 space-y-8">
                         <div className="group relative">
-                            <div className="relative aspect-video w-full overflow-hidden rounded-[2.5rem] bg-black shadow-2xl border border-white/5">
+                            <div className={cn(
+                                "relative aspect-video w-full overflow-hidden rounded-[2.5rem] bg-black shadow-2xl border border-white/5 transition-all duration-500",
+                                isLightsOff ? "z-[80] scale-[1.02] border-accent/20" : "z-auto"
+                            )}>
                                 {isIframeLoading && (
                                     <div className="absolute inset-0 z-10 flex flex-col items-center justify-center bg-black gap-4">
                                         <div className="w-12 h-12 border-4 border-accent/20 border-t-accent rounded-full animate-spin" />
@@ -162,7 +179,10 @@ export function WatchPage() {
                                 />
                             </div>
 
-                            <div className="absolute top-6 right-6 opacity-0 group-hover:opacity-100 transition-all">
+                            <div className={cn(
+                                "absolute top-6 right-6 opacity-0 group-hover:opacity-100 transition-all",
+                                isLightsOff ? "z-[81]" : "z-[10]"
+                            )}>
                                 <button
                                     onClick={() => setPlayerKey(k => k + 1)}
                                     className="p-4 bg-black/60 backdrop-blur-3xl rounded-2xl text-white hover:bg-accent hover:text-brand-secondary transition-all border border-white/5"
@@ -176,16 +196,23 @@ export function WatchPage() {
                             <div className="md:col-span-2 space-y-10">
                                 <div className="space-y-6">
                                     <h3 className="text-[10px] font-black uppercase tracking-[0.4em] text-accent/60">Storyline</h3>
-                                    <p className="text-white/60 text-xl leading-relaxed font-medium tracking-tight">
+                                    <p className="text-white/60 text-base md:text-xl leading-relaxed font-medium tracking-tight">
                                         {details?.overview}
                                     </p>
                                 </div>
 
-                                <div className="flex flex-wrap gap-3">
+                                <div className="flex flex-wrap gap-2 md:gap-3">
                                     {details?.genres?.map((g: any) => (
-                                        <span key={g.id} className="px-6 py-2.5 bg-white/[0.02] border border-white/5 rounded-2xl text-[10px] font-black uppercase tracking-[0.2em] text-white/30">
+                                        <button
+                                            key={g.id}
+                                            onClick={() => handleGenreClick(g.id, g.name)}
+                                            className={cn(
+                                                "px-4 py-2 rounded-full text-[10px] font-black uppercase tracking-[0.2em] transition-all border flex items-center gap-2 group/genre",
+                                                "bg-white/[0.02] border-white/5 text-white/40 hover:text-white hover:border-white/10 hover:bg-white/5"
+                                            )}
+                                        >
                                             {g.name}
-                                        </span>
+                                        </button>
                                     ))}
                                 </div>
                             </div>

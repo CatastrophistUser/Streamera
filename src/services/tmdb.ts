@@ -31,6 +31,18 @@ export const getDiscover = async (type: 'movie' | 'tv', page: number = 1): Promi
     return data.results;
 };
 
+export const getByGenre = async (type: 'movie' | 'tv', genreId: number, page: number = 1): Promise<Media[]> => {
+    const { data } = await tmdbApi.get<TMDBResponse<Media>>(`/discover/${type}`, {
+        params: {
+            page,
+            with_genres: genreId,
+            sort_by: 'popularity.desc',
+            'vote_count.gte': 50
+        }
+    });
+    return data.results;
+};
+
 export const searchMedia = async (query: string, page: number = 1): Promise<Media[]> => {
     const { data } = await tmdbApi.get<TMDBResponse<Media>>('/search/multi', {
         params: { query, page },
