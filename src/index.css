@@ -4,27 +4,224 @@
   --color-brand-primary: #a6b1b7;
   --color-brand-secondary: #000000;
   --color-accent: #c9f4f5;
+
+  /* Shadcn Light Mode Colors */
+  --light-bg: #ffffff;
+  --light-text: #09090b;
+  --light-accent: #f4f4f5;
 }
 
 :root {
   font-family: 'Inter', system-ui, -apple-system, sans-serif;
-  background-color: var(--color-brand-secondary);
-  color: #ffffff;
+  --bg-color: #000000;
+  --text-color: #ffffff;
+  --accent-color: #c9f4f5;
+  --border-color: rgba(255, 255, 255, 0.1);
+  --card-bg: rgba(255, 255, 255, 0.03);
 
-  /* Hide scrollbar for Chrome, Safari and Opera */
+  background-color: var(--bg-color);
+  color: var(--text-color);
+  transition: background-color 0.5s ease, color 0.5s ease;
+
+  /* Hide scrollbar */
   &::-webkit-scrollbar {
     display: none;
   }
 
-  /* Hide scrollbar for IE, Edge and Firefox */
   -ms-overflow-style: none;
   scrollbar-width: none;
+}
+
+:root.light {
+  --bg-color: var(--light-bg);
+  --text-color: var(--light-text);
+  --accent-color: var(--light-accent);
+  --border-color: rgba(95, 70, 75, 0.1);
+  --card-bg: rgba(95, 70, 75, 0.05);
 }
 
 body {
   margin: 0;
   min-height: 100vh;
   overflow-x: hidden;
+  background-color: var(--bg-color);
+  color: var(--text-color);
+}
+
+/* Light mode overrides for common components */
+.light .text-white\/90 {
+  color: var(--light-text) !important;
+  opacity: 1 !important;
+}
+
+.light .text-white\/80 {
+  color: var(--light-text) !important;
+  opacity: 0.9 !important;
+}
+
+.light .text-white\/70 {
+  color: var(--light-text) !important;
+  opacity: 0.8 !important;
+}
+
+.light .text-white\/60 {
+  color: var(--light-text) !important;
+  opacity: 0.7 !important;
+}
+
+.light .text-white\/40 {
+  color: var(--light-text) !important;
+  opacity: 0.6 !important;
+}
+
+.light .text-white\/30 {
+  color: var(--light-text) !important;
+  opacity: 0.5 !important;
+}
+
+.light .text-white\/20 {
+  color: var(--light-text) !important;
+  opacity: 0.5 !important;
+}
+
+.light .text-white\/10 {
+  color: var(--light-text) !important;
+  opacity: 0.3 !important;
+}
+
+.light .text-white {
+  color: var(--light-text) !important;
+  opacity: 1 !important;
+}
+
+.light .text-accent\/60 {
+  color: var(--light-text) !important;
+  opacity: 0.8 !important;
+}
+
+.light .text-accent\/20 {
+  color: var(--light-text) !important;
+  opacity: 0.4 !important;
+}
+
+.light .bg-white\/\[0\.02\],
+.light .bg-white\/5 {
+  background-color: #f8f8f8;
+}
+
+.light .bg-white\/\[0\.03\],
+.light .bg-white\/10 {
+  background-color: #f1f1f1;
+}
+
+.light .bg-black\/40 {
+  background-color: rgba(0, 0, 0, 0.05);
+}
+
+.light .bg-black\/60 {
+  background-color: rgba(0, 0, 0, 0.1);
+}
+
+.light .bg-black\/80 {
+  background-color: rgba(0, 0, 0, 0.15);
+}
+
+.light .border-white\/5 {
+  border-color: rgba(0, 0, 0, 0.05);
+}
+
+.light .border-white\/10 {
+  border-color: rgba(0, 0, 0, 0.1);
+}
+
+/* Accent color overrides - Standard Shadcn Blue/Zinc */
+.light .text-accent {
+  color: #18181b;
+}
+
+.light .bg-accent {
+  background-color: #18181b;
+  color: #ffffff;
+}
+
+.light .border-accent {
+  border-color: #18181b;
+}
+
+.light .fill-accent {
+  fill: #18181b;
+}
+
+/* Protection for dark background sections (Carousel) in light mode */
+.light .keep-dark .text-white\/90,
+.light .keep-dark .text-white {
+  color: #ffffff !important;
+  opacity: 0.9;
+}
+
+.light .keep-dark .text-white\/80 {
+  color: #ffffff !important;
+  opacity: 0.8;
+}
+
+.light .keep-dark .text-white\/70 {
+  color: #ffffff !important;
+  opacity: 0.7;
+}
+
+.light .keep-dark .text-white\/60 {
+  color: #ffffff !important;
+  opacity: 0.6;
+}
+
+.light .keep-dark .text-white\/40 {
+  color: #ffffff !important;
+  opacity: 0.4;
+}
+
+.light .keep-dark .text-white\/30 {
+  color: #ffffff !important;
+  opacity: 0.3;
+}
+
+.light .keep-dark .text-white\/20 {
+  color: #ffffff !important;
+  opacity: 0.2;
+}
+
+.light .keep-dark .text-white\/10 {
+  color: #ffffff !important;
+  opacity: 0.1;
+}
+
+.light .keep-dark .text-white\/40 {
+  color: #ffffff !important;
+  opacity: 0.4;
+}
+
+.light .keep-dark .text-white\/30 {
+  color: #ffffff !important;
+  opacity: 0.3;
+}
+
+.light .keep-dark .text-white\/20 {
+  color: #ffffff !important;
+  opacity: 0.2;
+}
+
+.light .keep-dark .text-white\/10 {
+  color: #ffffff !important;
+  opacity: 0.1;
+}
+
+.light .keep-dark .bg-black\/60 {
+  background-color: rgba(0, 0, 0, 0.6) !important;
+}
+
+/* Glassmorphism adjustments for light mode */
+.light .backdrop-blur-3xl {
+  backdrop-filter: blur(40px) brightness(1.1);
+  background-color: rgba(255, 255, 255, 0.8) !important;
 }
 
 /* Global utility to hide scrollbars on all elements */

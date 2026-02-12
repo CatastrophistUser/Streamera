@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { useLocation, Link } from 'react-router-dom';
+import { useTheme } from '@/hooks/useTheme';
 import { MediaCard } from '@/components/media/MediaCard';
 import { Play, Info, ArrowLeft, ArrowRight } from 'lucide-react';
 import { getImageUrl, getTrending, getDiscover } from '@/services/tmdb';
@@ -8,6 +9,7 @@ import { cn } from '@/utils/cn';
 
 export function HomePage() {
     const location = useLocation();
+    const { isDarkMode } = useTheme();
     const type = location.pathname === '/tv' ? 'tv' : (location.pathname === '/movies' ? 'movie' : 'all');
 
     const [items, setItems] = useState<Media[]>([]);
@@ -123,7 +125,7 @@ export function HomePage() {
 
     if (loading) {
         return (
-            <div className="flex flex-col gap-12 animate-pulse bg-brand-secondary min-h-screen">
+            <div className="flex flex-col gap-12 animate-pulse min-h-screen">
                 <div className="h-[70vh] w-full bg-white/5" />
                 <div className="max-w-7xl mx-auto w-full px-4 grid grid-cols-2 md:grid-cols-5 gap-6">
                     {[...Array(10)].map((_, i) => (
@@ -138,10 +140,10 @@ export function HomePage() {
     const gridItems = items.slice(5);
 
     return (
-        <div className="flex flex-col gap-12 bg-brand-secondary min-h-screen">
+        <div className="flex flex-col gap-12 min-h-screen">
             {/* Hero Section */}
             {featured && (
-                <section className="relative h-screen w-full overflow-hidden">
+                <section className="relative h-screen w-full overflow-hidden keep-dark">
                     <div className="absolute inset-0">
                         <img
                             src={getImageUrl(featured.backdrop_path, 'w1280') || ''}
@@ -149,7 +151,7 @@ export function HomePage() {
                             key={featured.id}
                             className="h-full w-full object-cover animate-in fade-in zoom-in-105 duration-1000"
                         />
-                        <div className="absolute inset-0 bg-brand-secondary/60" />
+                        <div className="absolute inset-0 bg-black/60" />
                     </div>
 
                     <div className="absolute bottom-[15%] md:bottom-1/4 left-0 w-full z-10 px-4 md:px-0">
@@ -180,7 +182,12 @@ export function HomePage() {
                                 </Link>
                                 <Link
                                     to={`/watch/${featured.media_type || (location.pathname === '/tv' ? 'tv' : 'movie')}/${featured.id}`}
-                                    className="bg-white/10 backdrop-blur-md text-white px-6 md:px-8 py-2.5 md:py-3 rounded-xl md:rounded-full text-xs md:text-base font-bold flex items-center gap-2 hover:bg-white/20 transition-all"
+                                    className={cn(
+                                        "px-6 md:px-8 py-2.5 md:py-3 rounded-xl md:rounded-full text-xs md:text-base font-bold flex items-center gap-2 transition-all",
+                                        isDarkMode
+                                            ? "bg-white/10 backdrop-blur-md text-white hover:bg-white/20"
+                                            : "bg-white text-black hover:bg-white/90 shadow-xl"
+                                    )}
                                 >
                                     <Info size={18} /> Details
                                 </Link>
@@ -210,7 +217,9 @@ export function HomePage() {
                                 "p-3 md:p-5 rounded-full backdrop-blur-3xl border border-white/10 transition-all group relative overflow-hidden",
                                 carouselIndex === 0
                                     ? "opacity-10 cursor-not-allowed bg-white/5"
-                                    : "bg-white/[0.03] text-white/40 hover:text-accent hover:border-accent/40 active:scale-90"
+                                    : (isDarkMode
+                                        ? "bg-white/[0.03] text-white/40 hover:text-accent hover:border-accent/40 active:scale-90"
+                                        : "bg-white text-black shadow-xl active:scale-90")
                             )}
                         >
                             <ArrowLeft className="w-4 h-4 md:w-5 md:h-5" />
@@ -218,7 +227,12 @@ export function HomePage() {
 
                         <button
                             onClick={handleNext}
-                            className="p-3 md:p-5 rounded-full bg-white/[0.03] backdrop-blur-3xl border border-white/10 text-white/40 hover:text-accent hover:border-accent/40 transition-all group relative overflow-hidden active:scale-90"
+                            className={cn(
+                                "p-3 md:p-5 rounded-full backdrop-blur-3xl border border-white/10 transition-all group relative overflow-hidden active:scale-90",
+                                isDarkMode
+                                    ? "bg-white/[0.03] text-white/40 hover:text-accent hover:border-accent/40"
+                                    : "bg-white text-black shadow-xl"
+                            )}
                         >
                             <ArrowRight className="w-4 h-4 md:w-5 md:h-5" />
                             {/* Visual Progress Bar on the "Next" button circle */}
@@ -229,7 +243,7 @@ export function HomePage() {
             )}
 
             {/* Content Grid */}
-            <section className="max-width-7xl mx-auto px-4 w-full py-12">
+            <section className="max-w-7xl mx-auto px-4 w-full py-12">
                 <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-x-6 gap-y-12">
                     {gridItems.map((item, index) => (
                         <div key={`${item.id}-${index}`} ref={index === gridItems.length - 1 ? lastElementRef : null}>

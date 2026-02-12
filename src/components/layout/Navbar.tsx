@@ -1,10 +1,11 @@
 import { Link, useLocation } from 'react-router-dom';
-import { Tv, Search, Film, ChevronUp, Moon, Sun } from 'lucide-react';
+import { Tv, Search, Film, ChevronUp, Sun, Moon } from 'lucide-react';
 import { useState, useEffect, useRef } from 'react';
 import { SpotlightSearch } from './SpotlightSearch';
 import { Logo } from '@/components/layout/Logo';
 import { cn } from '@/utils/cn';
-import { useLightsOff } from '@/context/LightsContext';
+
+import { useTheme } from '@/hooks/useTheme';
 
 export function Navbar() {
     const [isSearchOpen, setIsSearchOpen] = useState(false);
@@ -14,15 +15,18 @@ export function Navbar() {
     const lastScrollY = useRef(0);
     const isScrollingToTop = useRef(false);
     const location = useLocation();
-    const { isLightsOff, toggleLights } = useLightsOff();
+    const { isDarkMode, toggleTheme } = useTheme();
+    const [scrollY, setScrollY] = useState(0);
 
-    const isWatchPage = location.pathname.startsWith('/watch/');
+    const isHomePage = location.pathname === '/';
+    const isAtTop = scrollY < 400;
 
     useEffect(() => {
         const handleScroll = () => {
             if (isScrollingToTop.current) return;
 
             const currentScrollY = window.scrollY;
+            setScrollY(currentScrollY);
 
             if (currentScrollY > lastScrollY.current && currentScrollY > 100) {
                 setShowLogo(false);
@@ -72,24 +76,19 @@ export function Navbar() {
     return (
         <>
             {/* Logo Container */}
-            <div className={cn(
-                "fixed top-4 md:top-6 left-4 md:left-10 z-[60] transition-opacity duration-500 hidden md:flex items-center h-[52px] md:h-[60px]",
-                isLightsOff ? "opacity-20 pointer-events-none" : "opacity-100"
-            )}>
+            <div className="fixed top-4 md:top-6 left-4 md:left-10 z-[60] transition-opacity duration-500 hidden md:flex items-center h-[52px] md:h-[60px]">
                 <Link to="/" className="text-accent transform hover:scale-105 transition-transform block">
                     <Logo
                         animate
                         show={showLogo}
                         type={logoAnimation}
+                        forceInverse={isHomePage && isAtTop}
                     />
                 </Link>
             </div>
 
             {/* Floating Oval Navbar */}
-            <nav className={cn(
-                "fixed top-4 md:top-6 left-1/2 -translate-x-1/2 z-50 bg-white/[0.03] backdrop-blur-3xl border border-white/10 rounded-full shadow-2xl px-1 md:px-2 py-1 md:py-2 transition-all duration-500",
-                isLightsOff ? "opacity-20 pointer-events-none scale-95" : "opacity-100"
-            )}>
+            <nav className="fixed top-4 md:top-6 left-1/2 -translate-x-1/2 z-50 bg-white/[0.03] backdrop-blur-3xl border border-white/10 rounded-full shadow-2xl px-1 md:px-2 py-1 md:py-2 transition-all duration-500">
                 <div className="flex items-center gap-1">
                     <Link
                         to="/movies"
@@ -131,35 +130,6 @@ export function Navbar() {
                 </div>
             </nav>
 
-            {/* Lights Off Button - Circular Glassmorphic at Top Right aligned with pill */}
-            <div className={cn(
-                "fixed top-4 md:top-6 right-4 md:right-10 z-[80] transition-all duration-500",
-                !isWatchPage && "opacity-0 pointer-events-none translate-x-10"
-            )}>
-                <button
-                    onClick={toggleLights}
-                    className={cn(
-                        "p-3.5 md:p-4 rounded-full shadow-2xl transition-all duration-500 transform overflow-hidden relative group",
-                        "bg-white/[0.03] backdrop-blur-3xl border border-white/10",
-                        "hover:scale-110 active:scale-95 text-accent hover:border-accent/40",
-                        isLightsOff && "bg-accent/10 border-accent/30 shadow-[0_0_20px_rgba(var(--accent-rgb),0.2)]"
-                    )}
-                    title={isLightsOff ? "Turn On Lights" : "Turn Off Lights"}
-                >
-                    <div className="relative z-10">
-                        {isLightsOff ? (
-                            <Sun size={20} className="animate-in zoom-in duration-300" />
-                        ) : (
-                            <Moon size={20} className="animate-in zoom-in duration-300" />
-                        )}
-                    </div>
-
-                    {/* Tooltip */}
-                    <span className="absolute -bottom-10 left-1/2 -translate-x-1/2 text-[9px] font-black uppercase tracking-[0.2em] bg-black/80 backdrop-blur-md px-3 py-1 rounded-full border border-white/10 text-accent opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap">
-                        {isLightsOff ? "Turn On" : "Turn Off"}
-                    </span>
-                </button>
-            </div>
 
             {/* Glassmorphic Circular Back to Top Button */}
             <button
@@ -174,6 +144,28 @@ export function Navbar() {
                 <ChevronUp size={24} className="group-hover:-translate-y-1 transition-transform" />
                 <span className="absolute -top-10 left-1/2 -translate-x-1/2 text-[9px] font-black uppercase tracking-[0.2em] bg-black/80 backdrop-blur-md px-3 py-1 rounded-full border border-white/10 text-accent opacity-0 group-hover:opacity-100 transition-opacity">Top</span>
             </button>
+
+            {/* Theme Toggle Button */}
+            <div className="fixed top-4 md:top-6 right-4 md:right-10 z-[10000] transition-all duration-500">
+                <button
+                    onClick={toggleTheme}
+                    className={cn(
+                        "p-3.5 md:p-4 rounded-full shadow-2xl transition-all duration-500 transform overflow-hidden relative group",
+                        "bg-white/[0.03] backdrop-blur-3xl border border-white/10",
+                        "hover:scale-110 active:scale-95 text-accent hover:border-accent/40",
+                        !isDarkMode && "bg-[#18181b]/10 border-[#18181b]/30 text-[#18181b] shadow-[0_0_20px_rgba(24,24,27,0.1)]"
+                    )}
+                    title={isDarkMode ? "Switch to Light Mode" : "Switch to Dark Mode"}
+                >
+                    <div className="relative z-10 transition-transform duration-500 group-hover:rotate-12">
+                        {isDarkMode ? (
+                            <Sun size={20} className="animate-in zoom-in spin-in-90 duration-500" />
+                        ) : (
+                            <Moon size={20} className="animate-in zoom-in spin-in-90 duration-500" />
+                        )}
+                    </div>
+                </button>
+            </div>
 
             <SpotlightSearch
                 isOpen={isSearchOpen}

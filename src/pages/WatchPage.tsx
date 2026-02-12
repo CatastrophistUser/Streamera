@@ -3,7 +3,6 @@ import { getEmbedUrl, getMediaDetails, getSeasonDetails, getSimilar, getCredits,
 import { useState, useEffect, useRef } from 'react';
 import { RefreshCw, ChevronDown, Check } from 'lucide-react';
 import { cn } from '@/utils/cn';
-import { useLightsOff } from '@/context/LightsContext';
 
 const SOURCES = [
     { name: 'Server VIP', id: 'vidlink.pro' },
@@ -19,7 +18,6 @@ const SOURCES = [
 export function WatchPage() {
     const { type, id } = useParams<{ type: 'movie' | 'tv'; id: string }>();
     const [searchParams, setSearchParams] = useSearchParams();
-    const { isLightsOff, setLightsOff } = useLightsOff();
     const navigate = useNavigate();
     const dropdownRef = useRef<HTMLDivElement>(null);
 
@@ -37,9 +35,6 @@ export function WatchPage() {
     const [playerKey, setPlayerKey] = useState(0);
     const [isDropdownOpen, setIsDropdownOpen] = useState(false);
 
-    useEffect(() => {
-        return () => setLightsOff(false);
-    }, [setLightsOff]);
 
     useEffect(() => {
         if (type && id) {
@@ -105,7 +100,7 @@ export function WatchPage() {
     const runtime = type === 'movie' ? `${details?.runtime}m` : `${details?.number_of_episodes} Episodes`;
 
     return (
-        <div className="relative min-h-screen bg-brand-secondary pt-24">
+        <div className="min-h-screen pt-24">
             <div className="max-w-7xl mx-auto px-4 py-8 flex flex-col gap-6">
 
                 {/* Header Section */}
@@ -129,7 +124,7 @@ export function WatchPage() {
                         </div>
                     </div>
 
-                    <div className="flex items-center gap-2 p-1 bg-black rounded-2xl border border-white/5 w-full md:w-fit shadow-2xl overflow-x-auto custom-scrollbar-hidden">
+                    <div className="flex items-center gap-2 p-1 bg-black rounded-2xl border border-white/5 w-full md:w-fit shadow-2xl overflow-x-auto custom-scrollbar-hidden keep-dark">
                         <div className="flex items-center gap-2 min-w-max px-1 md:px-0">
                             {SOURCES.map((src) => (
                                 <button
@@ -153,10 +148,7 @@ export function WatchPage() {
 
                     <div className="lg:col-span-3 space-y-8">
                         <div className="group relative">
-                            <div className={cn(
-                                "relative aspect-video w-full overflow-hidden rounded-[2.5rem] bg-black shadow-2xl border border-white/5 transition-all duration-500",
-                                isLightsOff ? "z-[80] scale-[1.02] border-accent/20" : "z-auto"
-                            )}>
+                            <div className="relative aspect-video w-full overflow-hidden rounded-[2.5rem] bg-black shadow-2xl border border-white/5 transition-all duration-500">
                                 {isIframeLoading && (
                                     <div className="absolute inset-0 z-10 flex flex-col items-center justify-center bg-black gap-4">
                                         <div className="w-12 h-12 border-4 border-accent/20 border-t-accent rounded-full animate-spin" />
@@ -179,10 +171,7 @@ export function WatchPage() {
                                 />
                             </div>
 
-                            <div className={cn(
-                                "absolute top-6 right-6 opacity-0 group-hover:opacity-100 transition-all",
-                                isLightsOff ? "z-[81]" : "z-[10]"
-                            )}>
+                            <div className="absolute top-6 right-6 opacity-0 group-hover:opacity-100 transition-all z-10">
                                 <button
                                     onClick={() => setPlayerKey(k => k + 1)}
                                     className="p-4 bg-black/60 backdrop-blur-3xl rounded-2xl text-white hover:bg-accent hover:text-brand-secondary transition-all border border-white/5"
@@ -310,7 +299,7 @@ export function WatchPage() {
                                 similar.slice(0, 15).map((item) => (
                                     <Link
                                         key={item.id}
-                                        to={`/watch/movie/${item.id}`}
+                                        to={`/watch/${type}/${item.id}`}
                                         className="flex items-start gap-5 group p-2 rounded-2xl hover:bg-white/[0.02] transition-all"
                                     >
                                         <div className="w-32 aspect-video rounded-xl overflow-hidden border border-white/10 flex-shrink-0 shadow-lg bg-white/5 relative">
@@ -323,15 +312,15 @@ export function WatchPage() {
                                         </div>
                                         <div className="flex flex-col flex-1 min-w-0">
                                             <h4 className="text-sm font-black uppercase italic tracking-tighter leading-tight text-white/80 group-hover:text-accent transition-colors line-clamp-2">
-                                                {item.title}
+                                                {item.title || item.name}
                                             </h4>
                                             <div className="flex items-center gap-2 mt-1">
                                                 <span className="text-[10px] font-black text-white/30 tracking-tighter">
-                                                    {item.release_date?.split('-')[0]}
+                                                    {(item.release_date || item.first_air_date)?.split('-')[0]}
                                                 </span>
                                                 <span className="w-1 h-1 rounded-full bg-white/10" />
                                                 <p className="text-[10px] font-black text-white/20 uppercase tracking-widest truncate">
-                                                    {(item as any).vote_average?.toFixed(1)} ★
+                                                    {item.vote_average?.toFixed(1)} ★
                                                 </p>
                                             </div>
                                         </div>

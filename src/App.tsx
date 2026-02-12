@@ -3,11 +3,12 @@ import { Layout } from '@/components/layout/Layout';
 import { HomePage } from '@/pages/HomePage';
 import { WatchPage } from '@/pages/WatchPage';
 import { SearchPage } from '@/pages/SearchPage';
-import { LightsProvider } from '@/context/LightsContext';
+
+import { ThemeProvider } from '@/context/ThemeContext';
 
 function App() {
   return (
-    <LightsProvider>
+    <ThemeProvider>
       <HashRouter>
         <Routes>
           <Route path="/" element={<Layout />}>
@@ -19,7 +20,7 @@ function App() {
           </Route>
         </Routes>
       </HashRouter>
-    </LightsProvider>
+    </ThemeProvider>
   );
 }
 

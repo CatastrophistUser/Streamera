@@ -3,7 +3,7 @@ import { Outlet } from 'react-router-dom';
 
 export function Layout() {
     return (
-        <div className="min-vh-100 bg-neutral-950 text-white selection:bg-brand-primary selection:text-white">
+        <div className="min-h-screen selection:bg-brand-primary selection:text-white">
             <Navbar />
             <main className="pb-20">
                 <Outlet />

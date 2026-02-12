@@ -1,14 +1,19 @@
 import { cn } from '@/utils/cn';
 import logoUrl from '@/assets/logo.svg';
 
+import { useTheme } from '@/hooks/useTheme';
+
 interface LogoProps {
     className?: string;
     animate?: boolean;
     show?: boolean;
     type?: 'fade' | 'slide';
+    forceInverse?: boolean;
 }
 
-export function Logo({ className, animate = false, show = true, type = 'fade' }: LogoProps) {
+export function Logo({ className, animate = false, show = true, type = 'fade', forceInverse = false }: LogoProps) {
+    const { isDarkMode } = useTheme();
+
     return (
         <div
             className={cn(
@@ -20,7 +25,14 @@ export function Logo({ className, animate = false, show = true, type = 'fade' }:
                 !show && !animate && "opacity-0"
             )}
         >
-            <img src={logoUrl} alt="Streamera" className="h-8 md:h-4 w-auto block" />
+            <img
+                src={logoUrl}
+                alt="Streamera"
+                className={cn(
+                    "h-8 md:h-4 w-auto block transition-all duration-500",
+                    !isDarkMode && !forceInverse && "brightness-0 opacity-80"
+                )}
+            />
         </div>
     );
 }
