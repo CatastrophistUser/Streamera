@@ -12,7 +12,7 @@ export function Logo({ className, animate = false, show = true, type = 'fade' }:
     return (
         <div
             className={cn(
-                "relative transition-all duration-700 ease-out pt-1.5",
+                "relative transition-all duration-700 ease-out",
                 className,
                 // Animation logic
                 animate && type === 'fade' && (show ? "opacity-100 translate-y-0" : "opacity-0 -translate-y-4"),
@@ -20,7 +20,7 @@ export function Logo({ className, animate = false, show = true, type = 'fade' }:
                 !show && !animate && "opacity-0"
             )}
         >
-            <img src={logoUrl} alt="Streamera" className="h-10 md:h-20 w-auto block" />
+            <img src={logoUrl} alt="Streamera" className="h-4 w-auto block" />
         </div>
     );
 }
