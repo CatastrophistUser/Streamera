@@ -210,8 +210,12 @@ export function WatchPage() {
                                 <h3 className="text-[10px] font-black uppercase tracking-[0.4em] text-white/20">Featured Cast</h3>
                                 <div className="space-y-5">
                                     {credits?.cast?.slice(0, 5).map((person: any) => (
-                                        <div key={person.id} className="flex items-center gap-4 group">
-                                            <div className="h-14 w-14 rounded-2xl overflow-hidden grayscale group-hover:grayscale-0 transition-all border border-white/10 shadow-2xl">
+                                        <button
+                                            key={person.id}
+                                            onClick={() => navigate(`/search?sid=${person.id}&sn=${encodeURIComponent(person.name)}`)}
+                                            className="flex items-center gap-4 group w-full text-left"
+                                        >
+                                            <div className="h-14 w-14 rounded-2xl overflow-hidden grayscale group-hover:grayscale-0 transition-all border border-white/10 shadow-2xl shrink-0">
                                                 <img
                                                     src={getImageUrl(person.profile_path) || ''}
                                                     alt={person.name}
@@ -222,7 +226,7 @@ export function WatchPage() {
                                                 <p className="text-sm font-black text-white group-hover:text-accent transition-colors">{person.name}</p>
                                                 <p className="text-[10px] text-white/20 uppercase font-black tracking-widest mt-0.5">{person.character}</p>
                                             </div>
-                                        </div>
+                                        </button>
                                     ))}
                                 </div>
                             </div>

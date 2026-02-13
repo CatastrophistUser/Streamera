@@ -1,6 +1,6 @@
 import { useSearchParams } from 'react-router-dom';
 import { useState, useEffect, useRef, useCallback } from 'react';
-import { searchMedia, getByGenre } from '@/services/tmdb';
+import { searchMedia, getByGenre, getPersonCredits } from '@/services/tmdb';
 import type { Media } from '@/types/tmdb';
 import { MediaCard } from '@/components/media/MediaCard';
 import { useDebounce } from '@/hooks/useDebounce';
@@ -10,6 +10,8 @@ export function SearchPage() {
     const query = searchParams.get('q') || '';
     const genreId = searchParams.get('gid');
     const genreName = searchParams.get('gn');
+    const starId = searchParams.get('sid');
+    const starName = searchParams.get('sn');
     const mediaType = searchParams.get('type') as 'movie' | 'tv' | null;
     const debouncedQuery = useDebounce(query, 500);
 
@@ -31,9 +33,9 @@ export function SearchPage() {
         if (node) observer.current.observe(node);
     }, [loading, fetchingMore, hasMore]);
 
-    // Initial Search or Genre Discover
+    // Initial Search, Genre, or Star Discover
     useEffect(() => {
-        if (!debouncedQuery.trim() && !genreId) {
+        if (!debouncedQuery.trim() && !genreId && !starId) {
             setResults([]);
             setHasMore(false);
             return;
@@ -44,17 +46,20 @@ export function SearchPage() {
         setPage(1);
         setHasMore(true);
 
-        const fetchInitial = genreId && mediaType
-            ? getByGenre(mediaType, parseInt(genreId), 1)
-            : searchMedia(debouncedQuery, 1);
+        const fetchInitial = starId
+            ? getPersonCredits(starId)
+            : (genreId && mediaType
+                ? getByGenre(mediaType, parseInt(genreId), 1)
+                : searchMedia(debouncedQuery, 1));
 
         fetchInitial
             .then(res => {
                 setResults(res);
-                if (res.length < 10) setHasMore(false);
+                // For star credits, TMDB returns everything at once, so we disable load more
+                if (starId || res.length < 10) setHasMore(false);
             })
             .finally(() => setLoading(false));
-    }, [debouncedQuery, genreId, mediaType]);
+    }, [debouncedQuery, genreId, mediaType, starId]);
 
     // Fetch More
     useEffect(() => {
@@ -80,12 +85,14 @@ export function SearchPage() {
         <div className="max-w-7xl mx-auto px-4 pt-32 pb-12 min-h-screen">
             <div className="flex flex-col gap-2 mb-12">
                 <h1 className="text-3xl font-black italic uppercase tracking-tighter">
-                    {genreName ? `${genreName} ${mediaType === 'tv' ? 'Shows' : 'Movies'}` : 'Search Results'}
+                    {starName ? `Titles Featuring ${starName}` : (genreName ? `${genreName} ${mediaType === 'tv' ? 'Shows' : 'Movies'}` : 'Search Results')}
                 </h1>
                 <p className="text-white/40 font-medium lowercase italic tracking-tight">
-                    {genreName
-                        ? `Discovering the best of ${genreName}`
-                        : query ? `Showing results for "${query}"` : 'Discover something new'}
+                    {starName
+                        ? `Exploring the career of ${starName}`
+                        : (genreName
+                            ? `Discovering the best of ${genreName}`
+                            : query ? `Showing results for "${query}"` : 'Discover something new')}
                 </p>
             </div>
 

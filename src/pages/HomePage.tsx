@@ -197,19 +197,6 @@ export function HomePage() {
 
                     {/* Carousel Controls */}
                     <div className="absolute bottom-6 md:bottom-12 right-4 md:right-12 z-20 flex items-center gap-2">
-                        {/* Progress Ring (Background) */}
-                        <div className="absolute inset-0 -m-1 pointer-events-none">
-                            <svg className="w-full h-full transform -rotate-90">
-                                <circle
-                                    cx="50%"
-                                    cy="50%"
-                                    r="48%"
-                                    className="stroke-accent/10 fill-none"
-                                    strokeWidth="1"
-                                />
-                            </svg>
-                        </div>
-
                         <button
                             onClick={handlePrev}
                             disabled={carouselIndex === 0}
@@ -235,8 +222,24 @@ export function HomePage() {
                             )}
                         >
                             <ArrowRight className="w-4 h-4 md:w-5 md:h-5" />
-                            {/* Visual Progress Bar on the "Next" button circle */}
-                            <div className="absolute bottom-0 left-0 h-1 bg-accent/40 animate-[grow_10s_linear_infinite]" />
+
+                            {/* Full Button Circular Progress */}
+                            <div className="absolute inset-0 pointer-events-none -m-[1px]">
+                                <svg className="w-full h-full transform -rotate-90" viewBox="0 0 100 100">
+                                    <circle
+                                        cx="50"
+                                        cy="50"
+                                        r="49"
+                                        className="stroke-accent fill-none opacity-40"
+                                        strokeWidth="2"
+                                        pathLength="100"
+                                        style={{
+                                            strokeDasharray: '100',
+                                            animation: 'stroke-grow 10s linear infinite'
+                                        }}
+                                    />
+                                </svg>
+                            </div>
                         </button>
                     </div>
                 </section>

@@ -70,6 +70,11 @@ export const getCredits = async (type: 'movie' | 'tv', id: string) => {
     return data;
 };
 
+export const getPersonCredits = async (id: string): Promise<Media[]> => {
+    const { data } = await tmdbApi.get(`/person/${id}/combined_credits`);
+    return data.cast.sort((a: any, b: any) => b.popularity - a.popularity);
+};
+
 export const getImageUrl = (path: string, size: 'w300' | 'w780' | 'w1280' | 'original' = 'w300') =>
     path ? `${IMAGE_BASE_URL}/${size}${path}` : null;
 
