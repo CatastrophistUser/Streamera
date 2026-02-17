@@ -3,12 +3,14 @@ import { Layout } from '@/components/layout/Layout';
 import { HomePage } from '@/pages/HomePage';
 import { WatchPage } from '@/pages/WatchPage';
 import { SearchPage } from '@/pages/SearchPage';
+import { LoadingScreen } from '@/components/layout/LoadingScreen';
 
 import { ThemeProvider } from '@/context/ThemeContext';
 
 function App() {
   return (
     <ThemeProvider>
+      <LoadingScreen />
       <HashRouter>
         <Routes>
           <Route path="/" element={<Layout />}>

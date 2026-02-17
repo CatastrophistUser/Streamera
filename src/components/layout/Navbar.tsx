@@ -59,6 +59,7 @@ export function Navbar() {
     const scrollToTop = () => {
         isScrollingToTop.current = true;
         setShowLogo(false);
+        setShowTopButton(false); // Immediately hide the button
         setLogoAnimation('slide');
 
         window.scrollTo({
