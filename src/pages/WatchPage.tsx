@@ -4,15 +4,21 @@ import { useState, useEffect, useRef } from 'react';
 import { RefreshCw, ChevronDown, Check } from 'lucide-react';
 import { cn } from '@/utils/cn';
 
-const SOURCES = [
-    { name: 'Server VIP', id: 'vidlink.pro' },
-    { name: 'Ultra', id: 'vidsrc.xyz' },
-    { name: 'Multi', id: 'multiembed.mov' },
-    { name: 'Direct', id: 'vidsrc.icu' },
-    { name: 'Fast', id: 'vidsrc.cc' },
-    { name: 'Stable', id: 'vidsrc.me' },
-    { name: 'Classic', id: 'vidsrc.pm' },
-    { name: 'Legacy', id: 'vidsrc.to' },
+type PlaybackSource = {
+    id: string;
+    label: string;
+    host: 'vidlink.pro' | 'vidsrcme.ru' | 'vidsrc.pm';
+};
+
+const SOURCES: PlaybackSource[] = [
+    { id: 'server-vip', label: 'Server VIP', host: 'vidlink.pro' },
+    { id: 'mirror-ultra', label: 'Ultra', host: 'vidsrcme.ru' },
+    { id: 'classic-multi', label: 'Multi', host: 'vidsrc.pm' },
+    { id: 'direct-vidlink', label: 'Direct', host: 'vidlink.pro' },
+    { id: 'fast-mirror', label: 'Fast', host: 'vidsrcme.ru' },
+    { id: 'stable-classic', label: 'Stable', host: 'vidsrc.pm' },
+    { id: 'classic-backup', label: 'Classic', host: 'vidlink.pro' },
+    { id: 'legacy-mirror', label: 'Legacy', host: 'vidsrcme.ru' },
 ];
 
 export function WatchPage() {
@@ -23,7 +29,7 @@ export function WatchPage() {
 
     const season = parseInt(searchParams.get('s') || '1');
     const episode = parseInt(searchParams.get('e') || '1');
-    const [activeSource, setActiveSource] = useState(SOURCES[0].id);
+    const [activeSourceId, setActiveSourceId] = useState(SOURCES[0].id);
     const [isIframeLoading, setIsIframeLoading] = useState(true);
 
     const [details, setDetails] = useState<any>(null);
@@ -72,7 +78,8 @@ export function WatchPage() {
         return () => document.removeEventListener('mousedown', handleClickOutside);
     }, []);
 
-    const embedUrl = type && id ? getEmbedUrl(type, id, season, episode, activeSource) : '';
+    const activeSource = SOURCES.find((source) => source.id === activeSourceId) ?? SOURCES[0];
+    const embedUrl = type && id ? getEmbedUrl(type, id, season, episode, activeSource.host) : '';
 
     const handleEpisodeClick = (s: number, e: number) => {
         setSearchParams({ s: s.toString(), e: e.toString() });
@@ -86,7 +93,7 @@ export function WatchPage() {
 
     useEffect(() => {
         setIsIframeLoading(true);
-    }, [activeSource, season, episode]);
+    }, [activeSourceId, season, episode]);
 
     if (loading) {
         return (
@@ -129,15 +136,15 @@ export function WatchPage() {
                             {SOURCES.map((src) => (
                                 <button
                                     key={src.id}
-                                    onClick={() => setActiveSource(src.id)}
+                                    onClick={() => setActiveSourceId(src.id)}
                                     className={cn(
                                         "px-4 md:px-5 py-2 rounded-xl text-[9px] md:text-[10px] font-black uppercase tracking-widest transition-all",
-                                        activeSource === src.id
+                                        activeSourceId === src.id
                                             ? "bg-accent text-brand-secondary shadow-lg shadow-accent/20"
                                             : "text-white/20 hover:text-white"
                                     )}
                                 >
-                                    {src.name}
+                                    {src.label}
                                 </button>
                             ))}
                         </div>
@@ -156,7 +163,7 @@ export function WatchPage() {
                                     </div>
                                 )}
                                 <iframe
-                                    key={playerKey + activeSource + episode + season}
+                                    key={`${playerKey}-${activeSourceId}-${episode}-${season}`}
                                     src={embedUrl}
                                     onLoad={() => setIsIframeLoading(false)}
                                     className={cn(
