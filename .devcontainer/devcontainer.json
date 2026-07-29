@@ -1,0 +1,13 @@
+{
+  "name": "Streamera",
+  "image": "mcr.microsoft.com/devcontainers/javascript-node:1-22-bookworm",
+  "features": {},
+  "forwardPorts": [5173, 5500],
+  "postCreateCommand": "npm install",
+  "customizations": {
+    "vscode": {
+      "extensions": ["anthropic.claude-code", "ritwickdey.liveserver"]
+    }
+  },
+  "remoteUser": "node"
+}
