@@ -1,0 +1,55 @@
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+# A newer push to the same branch supersedes an in-flight run.
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    name: verify
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: yarn
+
+      - name: Install
+        run: yarn install --frozen-lockfile
+
+      # yarn 1 can rewrite yarn.lock during install, pruning the optional native
+      # binaries for platforms other than the runner's. That still builds here but
+      # breaks a clean install on macOS/Windows, so fail loudly instead.
+      - name: Lockfile is unchanged by install
+        run: git diff --exit-code yarn.lock
+
+      - name: Validate providers.json
+        run: yarn validate:providers
+
+      - name: Lint
+        run: yarn lint
+
+      - name: Build
+        run: yarn build
+
+      - name: providers.json is published in the build
+        run: |
+          test -f dist/providers.json
+          node -e "
+            const c = require('./dist/providers.json');
+            if (!Array.isArray(c.providers) || c.providers.length === 0) {
+              throw new Error('dist/providers.json has no providers');
+            }
+            console.log('dist/providers.json OK -', c.providers.length, 'provider(s)');
+          "
