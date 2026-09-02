@@ -174,11 +174,15 @@ The app frequently uses runtime field checks such as `title in item` because TMD
 [.github/workflows/ci.yml](.github/workflows/ci.yml) runs on every pull request and on pushes to `main`:
 install (frozen lockfile) -> assert `yarn.lock` was not rewritten by the install -> `yarn validate:providers` -> `yarn lint` -> `yarn build` -> assert `dist/providers.json` shipped.
 
-The lockfile assertion exists because yarn 1 can prune optional native binaries for
-platforms other than the runner's, which still builds on Linux but breaks a clean
-install on macOS/Windows.
+**This CI is advisory, not required.** The repo is private with a single
+committer, and GitHub cannot enforce branch protection on it, so nothing gates on
+these checks — they only report. `ci.yml` could be deleted with no functional
+effect; it is kept as a convenience signal. Do not add more CI or make it
+load-bearing. The lockfile assertion still earns its place: yarn 1 can prune
+optional native binaries for platforms other than the runner's, which builds on
+Linux but breaks a clean install on macOS/Windows.
 
-`yarn lint` is a required check, so the lint baseline must stay at zero errors.
+Keep the lint baseline at zero errors regardless — it keeps `yarn lint` useful.
 
 ## Configuration
 - [vite.config.ts](vite.config.ts) sets:
@@ -190,15 +194,27 @@ install on macOS/Windows.
 - [vercel.json](vercel.json) rewrites `/tmdb/:path*` to TMDB and routes all other paths to `index.html`.
 - [public/robots.txt](public/robots.txt) disallows crawling.
 - [public/providers.json](public/providers.json) is runtime config, not build config — see "Playback Providers".
-- [eve-automation-plan.md](eve-automation-plan.md) is the roadmap for automating provider updates; [context.md](context.md) is the working log of that effort (phase status, branches, decisions, outstanding manual steps). The provider decoupling above is Phase 0 of that plan and is on `main`.
+- [context.md](context.md) is the working log of the provider-automation effort — **read its "Scope" box first**. [eve-automation-plan.md](eve-automation-plan.md) is the older plan and is **over-scoped**: it needs reworking down to "add one bot to the current stack, nothing else" (see the note at its top).
 
 ## Provider Automation (Eve agent)
-The goal is a bot that checks the playback providers daily and swaps out dead ones by committing to `public/providers.json` directly — no PR, no auto-merge (the repo is private with one committer). Status:
+**Scope (decided, do not re-expand):** one Eve agent that checks the playback
+providers daily and, when some are dead, commits a fix to `public/providers.json`
+**directly on `main`** via the GitHub API. No PR, no auto-merge, no required CI,
+no new infrastructure. An LLM agent committing straight to a private repo is the
+whole design.
 
-- **Phase 0 — decouple providers** (this section's `providers.json` layer): ✅ on `main`.
-- **Phase 1 — CI gate**: ✅ on `main` (PR #1). [.github/workflows/ci.yml](.github/workflows/ci.yml) + `scripts/validate-providers.mjs` (`yarn validate:providers`) run on every PR and push. Branch protection is **not enforced** (private repo on a personal account), so CI reports but does not block.
-- **Phase 2 — the Eve agent**: 🔶 branch `eve-provider-agent` (not merged). Adds `eve-agent/`, a standalone [Eve](https://vercel.com/eve) project (Node 24, its own `package.json`/`tsconfig`, excluded from this repo's eslint). Tools: `read_providers`, `check_provider` (returns evidence, not a verdict), `update_providers` (re-validates, refuses no-ops and empty lists, commits to `main`), `notify` (ntfy). Daily schedule `0 6 * * *` UTC. Model: a free `minimax/*` AI Gateway model.
-- Deploying the agent needs the user to supply a GitHub token + ntfy topic and run `eve deploy`. See [context.md](context.md) → "Outstanding manual steps".
+`eve-agent/` (on `main`) is a standalone [Eve](https://vercel.com/eve) project —
+Node 24, its own `package.json` / `tsconfig` / `yarn.lock`, excluded from this
+repo's eslint; build output (`.output/`, `.eve/`, `node_modules/`) is gitignored.
+
+- `agent/instructions.md` — standing brief; a healthy run is **silent** (no commit, no notify).
+- `agent/tools/` — `read_providers`, `check_provider` (returns *evidence*, not a verdict), `update_providers` (re-validates the whole list, refuses no-ops and empty lists, commits to `main`), `notify` (ntfy).
+- `agent/skills/provider-candidates.md` — the only hosts the agent may add; marked unverified (this environment's DNS blocks several).
+- `agent/schedules/daily-provider-check.ts` — `0 6 * * *` UTC → a Vercel Cron Job.
+- `agent/lib/providers.ts` — `validateConfig()` mirrors `scripts/validate-providers.mjs`; change both together.
+- Model: a free `minimax/*` AI Gateway model (`agent/agent.ts`, one-line swap when the free promo rotates).
+
+Not yet running — needs the user to supply a GitHub token + ntfy topic and run `eve deploy`. See [context.md](context.md) → "Outstanding manual steps".
 
 ## Commands
 This project uses **yarn**. `yarn.lock` is the only lockfile that should be committed;

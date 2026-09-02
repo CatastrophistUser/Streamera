@@ -1,7 +1,28 @@
 # Streamera: Eve Provider-Automation Plan
 
-Status: draft / for discussion
+Status: **superseded / over-scoped — needs a rewrite**
 Last updated: 2026-09-02
+
+---
+
+> ## ⚠️ Read before using this document
+>
+> The user narrowed the scope after this was written. The actual goal is:
+> **add one Eve agent to the existing GitHub + Vercel stack that checks the
+> providers and commits fixes to `public/providers.json` directly. Nothing else.**
+>
+> - **No PR / auto-merge workflow.** The agent commits straight to `main`.
+> - **No required CI.** `ci.yml` is advisory only and may be deleted.
+> - **No Edge Config, no separate health-check service, no "Phase 3".**
+>
+> This document still frames the work as a multi-phase programme with CI gating,
+> auto-merge, and Edge Config. **A future agent should rewrite it** down to: the
+> goal, what Eve is, the single agent (`eve-agent/`), how to deploy it, and how
+> to change the model / candidate list. Keep the still-useful reference material
+> (cost model §8, ntfy notes §6, model-selection notes §7, the health-check
+> caveat §3). Drop everything else.
+>
+> Current authoritative status lives in [context.md](context.md) — start there.
 
 ---
 
