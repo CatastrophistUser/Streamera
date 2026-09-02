@@ -30,6 +30,7 @@ Secondary goal: learn automation / agent tooling (Eve) in the process.
 | Notifications | **ntfy** for logging: alert when providers look down and when a push/PR is made (see §6) |
 | LLM model | Use **whatever free model is live on AI Gateway** (currently `minimax/minimax-m3-free`). If no free ID is available at the time, fall back to a cheap model within the $5/mo AI Gateway credit (Haiku / Flash class). One-line change in `agent.ts` either way (see §7) |
 | Plan tier | Vercel **Hobby** — personal, no ads, `robots.txt` disallows crawling → within Hobby's non-commercial terms |
+| GitHub | Repo is **private**; account has **GitHub Pro via the Student Developer Pack**, so protected branches on a private repo are available. Actions quota is the Pro tier (3,000 min/month), not the public-repo unlimited tier |
 
 ---
 
@@ -158,9 +159,26 @@ Shipped as `.github/workflows/ci.yml`, running on every PR and push to `main`:
 
 (No independent health-check re-run for now — deferred with §3.)
 
-Still to do by hand in the GitHub UI (cannot be scripted from here): branch
-protection on `main` requiring the `verify` check, and enabling "Allow
-auto-merge".
+Still to do by hand in the GitHub UI (cannot be scripted from here):
+
+- Branch protection on `main`: require a PR (**approvals = 0**, so agent PRs are
+  not blocked waiting on a human), require the `verify` status check, require
+  branches to be up to date. Leave "do not allow bypassing" off so an admin
+  escape hatch remains on a solo repo.
+- `Settings` → `General` → ☑ Allow auto-merge.
+
+Notes:
+
+- The per-PR "Enable auto-merge" button only appears once something actually
+  blocks the merge. With no branch protection rule there is no pending
+  condition, so GitHub never offers it — that is expected, not a misconfiguration.
+- `ci.yml` deliberately has no `paths` filter. A required check that does not run
+  on some PRs would leave those PRs blocked forever.
+- Once "require a pull request" is on, `git push origin main` stops working;
+  every change goes through a PR.
+- Student Pack Pro is time-limited. If it lapses to Free, branch protection on a
+  private repo silently stops being enforced — re-verify before relying on
+  unattended merges.
 
 Then: branch protection on `main` requires these checks; enable "Allow
 auto-merge"; agent PRs turn on auto-merge, so a green PR merges itself and Vercel
@@ -410,8 +428,8 @@ Sources: <https://vercel.com/docs/cron-jobs/usage-and-pricing>,
   self-hosting.
 - **LLM spend** — capped in the AI Gateway dashboard; gate LLM calls behind
   "there is actually a decision to make".
-- **Repo visibility** — if `Streamera` is private, Actions minutes are capped at
-  2,000/month on the Free plan (still plenty here).
+- **Repo visibility** — `Streamera` is private on GitHub Pro, so Actions minutes
+  are capped at 3,000/month (still plenty here) rather than unlimited.
 - **Hobby non-commercial clause** — any future monetization forces Vercel Pro.
 - **Secrets hygiene** — GitHub token scoped to one repo, `contents:write` +
   `pull_requests:write` only; `NTFY_TOPIC` and model keys in env/secrets.
