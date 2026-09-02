@@ -3,30 +3,31 @@ import { Search, X, Star, Play, Tv } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { searchMedia, getImageUrl } from '@/services/tmdb';
 import { useDebounce } from '@/hooks/useDebounce';
+import type { Media } from '@/types/tmdb';
 
 interface SpotlightSearchProps {
-    isOpen: boolean;
     onClose: () => void;
 }
 
-export function SpotlightSearch({ isOpen, onClose }: SpotlightSearchProps) {
+/** Rendered only while open — Navbar unmounts it on close, which resets its state. */
+export function SpotlightSearch({ onClose }: SpotlightSearchProps) {
     const [query, setQuery] = useState('');
-    const [results, setResults] = useState<any[]>([]);
-    const [loading, setLoading] = useState(false);
     const debouncedQuery = useDebounce(query, 300);
     const inputRef = useRef<HTMLInputElement>(null);
     const navigate = useNavigate();
 
+    // Results are stored with the query they belong to, so "still loading" and
+    // "these results are stale" are derived rather than tracked in extra state.
+    const [fetched, setFetched] = useState<{ query: string; items: Media[] }>({ query: '', items: [] });
+    const trimmedQuery = debouncedQuery.trim();
+    const results = fetched.query === trimmedQuery ? fetched.items : [];
+    const loading = trimmedQuery !== '' && fetched.query !== trimmedQuery;
+
     useEffect(() => {
-        if (isOpen) {
-            inputRef.current?.focus();
-            document.body.style.overflow = 'hidden';
-        } else {
-            document.body.style.overflow = 'auto';
-            setQuery('');
-            setResults([]);
-        }
-    }, [isOpen]);
+        inputRef.current?.focus();
+        document.body.style.overflow = 'hidden';
+        return () => { document.body.style.overflow = 'auto'; };
+    }, []);
 
     useEffect(() => {
         const handleEsc = (e: KeyboardEvent) => {
@@ -37,16 +38,14 @@ export function SpotlightSearch({ isOpen, onClose }: SpotlightSearchProps) {
     }, [onClose]);
 
     useEffect(() => {
-        if (debouncedQuery.trim()) {
-            setLoading(true);
-            searchMedia(debouncedQuery).then((res) => {
-                setResults(res.slice(0, 30)); // Show up to 30 results with scrolling
-                setLoading(false);
-            });
-        } else {
-            setResults([]);
-        }
-    }, [debouncedQuery]);
+        if (!trimmedQuery) return;
+        let cancelled = false;
+        searchMedia(trimmedQuery).then((res) => {
+            // Show up to 30 results with scrolling
+            if (!cancelled) setFetched({ query: trimmedQuery, items: res.slice(0, 30) });
+        });
+        return () => { cancelled = true; };
+    }, [trimmedQuery]);
 
     const handleSearchSubmit = (e: React.FormEvent) => {
         e.preventDefault();
@@ -55,8 +54,6 @@ export function SpotlightSearch({ isOpen, onClose }: SpotlightSearchProps) {
             onClose();
         }
     };
-
-    if (!isOpen) return null;
 
     return (
         <div className="fixed inset-0 z-[100] flex flex-col items-center pt-[10vh] px-4 animate-in fade-in duration-300 overflow-y-auto custom-scrollbar-hidden">
@@ -125,12 +122,12 @@ export function SpotlightSearch({ isOpen, onClose }: SpotlightSearchProps) {
                                 </div>
                                 <div className="px-1">
                                     <h4 className="text-xs font-black uppercase italic tracking-tighter text-white/80 group-hover:text-accent transition-colors line-clamp-1">
-                                        {item.title || item.name}
+                                        {'title' in item ? item.title : item.name}
                                     </h4>
                                     <div className="flex items-center gap-2 text-[9px] text-white/20 uppercase font-black tracking-widest mt-1">
                                         <span>{item.media_type === 'tv' ? 'Series' : 'Movie'}</span>
                                         <span className="text-white/10">/</span>
-                                        <span>{(item.release_date || item.first_air_date)?.split('-')[0]}</span>
+                                        <span>{('release_date' in item ? item.release_date : item.first_air_date)?.split('-')[0]}</span>
                                     </div>
                                 </div>
                             </button>

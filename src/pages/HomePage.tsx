@@ -15,9 +15,13 @@ export function HomePage() {
     const [items, setItems] = useState<Media[]>([]);
     const [page, setPage] = useState(1);
     const [loading, setLoading] = useState(true);
-    const [fetchingMore, setFetchingMore] = useState(false);
     const [hasMore, setHasMore] = useState(true);
     const [carouselIndex, setCarouselIndex] = useState(0);
+
+    // Derived rather than tracked: a later page has been requested than the one
+    // we have finished loading.
+    const [loadedPage, setLoadedPage] = useState(1);
+    const fetchingMore = loadedPage < page;
 
     const observer = useRef<IntersectionObserver | null>(null);
     const lastElementRef = useCallback((node: HTMLDivElement) => {
@@ -31,13 +35,10 @@ export function HomePage() {
         if (node) observer.current.observe(node);
     }, [loading, fetchingMore, hasMore]);
 
-    // Initial Fetch
+    // Initial Fetch. App.tsx keys this component per route, so a route change
+    // remounts it and resets state instead of this effect clearing it.
     useEffect(() => {
-        setLoading(true);
-        setItems([]);
-        setPage(1);
-        setHasMore(true);
-        setCarouselIndex(0);
+        let cancelled = false;
 
         const fetchInitial = async () => {
             try {
@@ -49,41 +50,44 @@ export function HomePage() {
 
                 // Shuffle the initial list
                 const shuffled = [...data].sort(() => Math.random() - 0.5);
-                setItems(shuffled);
-                setLoading(false);
+                if (!cancelled) setItems(shuffled);
             } catch (error) {
                 console.error(error);
-                setLoading(false);
+            } finally {
+                if (!cancelled) setLoading(false);
             }
         };
 
         fetchInitial();
+        return () => { cancelled = true; };
     }, [type]);
 
     // Fetch More
     useEffect(() => {
         if (page === 1) return;
+        let cancelled = false;
 
-        setFetchingMore(true);
         const fetchMore = async () => {
             try {
                 const data = type === 'all'
                     ? await getTrending('all', page)
                     : await getDiscover(type as 'movie' | 'tv', page);
 
+                if (cancelled) return;
                 if (data.length === 0) {
                     setHasMore(false);
                 } else {
                     setItems(prev => [...prev, ...data]);
                 }
-                setFetchingMore(false);
             } catch (error) {
                 console.error(error);
-                setFetchingMore(false);
+            } finally {
+                if (!cancelled) setLoadedPage(page);
             }
         };
 
         fetchMore();
+        return () => { cancelled = true; };
     }, [page, type]);
 
     const handleNext = useCallback(() => {

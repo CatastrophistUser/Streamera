@@ -168,10 +168,9 @@ export function Navbar() {
                 </button>
             </div>
 
-            <SpotlightSearch
-                isOpen={isSearchOpen}
-                onClose={() => setIsSearchOpen(false)}
-            />
+            {isSearchOpen && (
+                <SpotlightSearch onClose={() => setIsSearchOpen(false)} />
+            )}
         </>
     );
 }

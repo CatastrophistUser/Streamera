@@ -1,5 +1,5 @@
 import axios from 'axios';
-import type { TMDBResponse, Media } from '@/types/tmdb';
+import type { TMDBResponse, Media, MediaDetails, SeasonDetails, Credits } from '@/types/tmdb';
 
 const TMDB_ACCESS_TOKEN = import.meta.env.VITE_TMDB_ACCESS_TOKEN;
 const BASE_URL = '/tmdb';
@@ -50,13 +50,13 @@ export const searchMedia = async (query: string, page: number = 1): Promise<Medi
     return data.results.filter(item => item.media_type === 'movie' || item.media_type === 'tv');
 };
 
-export const getMediaDetails = async (type: 'movie' | 'tv', id: string) => {
-    const { data } = await tmdbApi.get(`/${type}/${id}`);
+export const getMediaDetails = async (type: 'movie' | 'tv', id: string): Promise<MediaDetails> => {
+    const { data } = await tmdbApi.get<MediaDetails>(`/${type}/${id}`);
     return data;
 };
 
-export const getSeasonDetails = async (id: string, seasonNumber: number) => {
-    const { data } = await tmdbApi.get(`/tv/${id}/season/${seasonNumber}`);
+export const getSeasonDetails = async (id: string, seasonNumber: number): Promise<SeasonDetails> => {
+    const { data } = await tmdbApi.get<SeasonDetails>(`/tv/${id}/season/${seasonNumber}`);
     return data;
 };
 
@@ -65,15 +65,17 @@ export const getSimilar = async (type: 'movie' | 'tv', id: string): Promise<Medi
     return data.results;
 };
 
-export const getCredits = async (type: 'movie' | 'tv', id: string) => {
-    const { data } = await tmdbApi.get(`/${type}/${id}/credits`);
+export const getCredits = async (type: 'movie' | 'tv', id: string): Promise<Credits> => {
+    const { data } = await tmdbApi.get<Credits>(`/${type}/${id}/credits`);
     return data;
 };
 
 export const getPersonCredits = async (id: string): Promise<Media[]> => {
-    const { data } = await tmdbApi.get(`/person/${id}/combined_credits`);
-    return data.cast.sort((a: any, b: any) => b.popularity - a.popularity);
+    const { data } = await tmdbApi.get<{ cast: (Media & { popularity?: number })[] }>(`/person/${id}/combined_credits`);
+    return [...data.cast].sort((a, b) => (b.popularity ?? 0) - (a.popularity ?? 0));
 };
 
-export const getImageUrl = (path: string, size: 'w300' | 'w780' | 'w1280' | 'original' = 'w300') =>
-    path ? `${IMAGE_BASE_URL}/${size}${path}` : null;
+export const getImageUrl = (
+    path: string | null | undefined,
+    size: 'w300' | 'w780' | 'w1280' | 'original' = 'w300'
+) => (path ? `${IMAGE_BASE_URL}/${size}${path}` : null);

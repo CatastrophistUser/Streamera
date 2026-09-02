@@ -4,6 +4,7 @@ import { buildEmbedUrl, loadProviders, FALLBACK_PROVIDERS } from '@/services/pro
 import { useState, useEffect, useRef } from 'react';
 import { RefreshCw, ChevronDown, Check } from 'lucide-react';
 import { cn } from '@/utils/cn';
+import type { Media, MediaDetails, SeasonDetails, Credits, Genre, Season, Episode, CastMember } from '@/types/tmdb';
 
 export function WatchPage() {
     const { type, id } = useParams<{ type: 'movie' | 'tv'; id: string }>();
@@ -15,42 +16,58 @@ export function WatchPage() {
     const episode = parseInt(searchParams.get('e') || '1');
     const [providers, setProviders] = useState(FALLBACK_PROVIDERS);
     const [activeSourceId, setActiveSourceId] = useState(FALLBACK_PROVIDERS[0].id);
-    const [isIframeLoading, setIsIframeLoading] = useState(true);
 
-    const [details, setDetails] = useState<any>(null);
-    const [seasonData, setSeasonData] = useState<any>(null);
-    const [similar, setSimilar] = useState<any[]>([]);
-    const [credits, setCredits] = useState<any>(null);
-    const [loading, setLoading] = useState(true);
-    const [episodesLoading, setEpisodesLoading] = useState(false);
+    const [details, setDetails] = useState<MediaDetails | null>(null);
+    const [seasonData, setSeasonData] = useState<SeasonDetails | null>(null);
+    const [similar, setSimilar] = useState<Media[]>([]);
+    const [credits, setCredits] = useState<Credits | null>(null);
     const [playerKey, setPlayerKey] = useState(0);
     const [isDropdownOpen, setIsDropdownOpen] = useState(false);
 
+    // Loading flags are derived by comparing what has finished loading against
+    // what is currently requested, so no effect has to set them synchronously.
+    const mediaKey = type && id ? `${type}/${id}` : null;
+    const [loadedMediaKey, setLoadedMediaKey] = useState<string | null>(null);
+    const loading = mediaKey !== null && loadedMediaKey !== mediaKey;
+
+    const seasonKey = type === 'tv' && id ? `${id}/${season}` : null;
+    const [loadedSeasonKey, setLoadedSeasonKey] = useState<string | null>(null);
+    const episodesLoading = seasonKey !== null && loadedSeasonKey !== seasonKey;
+
+    const playerIdentity = `${playerKey}-${activeSourceId}-${season}-${episode}`;
+    const [loadedPlayerIdentity, setLoadedPlayerIdentity] = useState<string | null>(null);
+    const isIframeLoading = loadedPlayerIdentity !== playerIdentity;
 
     useEffect(() => {
-        if (type && id) {
-            setLoading(true);
-            window.scrollTo(0, 0);
+        if (!type || !id) return;
+        let cancelled = false;
+        window.scrollTo(0, 0);
 
-            Promise.all([
-                getMediaDetails(type, id),
-                getSimilar(type, id),
-                getCredits(type, id)
-            ]).then(([detailsRes, similarRes, creditsRes]) => {
-                setDetails(detailsRes);
-                setSimilar(similarRes);
-                setCredits(creditsRes);
-            }).finally(() => setLoading(false));
-        }
+        Promise.all([
+            getMediaDetails(type, id),
+            getSimilar(type, id),
+            getCredits(type, id)
+        ]).then(([detailsRes, similarRes, creditsRes]) => {
+            if (cancelled) return;
+            setDetails(detailsRes);
+            setSimilar(similarRes);
+            setCredits(creditsRes);
+        }).finally(() => {
+            if (!cancelled) setLoadedMediaKey(`${type}/${id}`);
+        });
+
+        return () => { cancelled = true; };
     }, [type, id]);
 
     useEffect(() => {
-        if (type === 'tv' && id) {
-            setEpisodesLoading(true);
-            getSeasonDetails(id, season)
-                .then(setSeasonData)
-                .finally(() => setEpisodesLoading(false));
-        }
+        if (type !== 'tv' || !id) return;
+        let cancelled = false;
+
+        getSeasonDetails(id, season)
+            .then((data) => { if (!cancelled) setSeasonData(data); })
+            .finally(() => { if (!cancelled) setLoadedSeasonKey(`${id}/${season}`); });
+
+        return () => { cancelled = true; };
     }, [id, type, season]);
 
     useEffect(() => {
@@ -86,10 +103,6 @@ export function WatchPage() {
         if (!type) return;
         navigate(`/search?gid=${genreId}&gn=${encodeURIComponent(genreName)}&type=${type}`);
     };
-
-    useEffect(() => {
-        setIsIframeLoading(true);
-    }, [activeSourceId, season, episode]);
 
     if (loading) {
         return (
@@ -159,9 +172,9 @@ export function WatchPage() {
                                     </div>
                                 )}
                                 <iframe
-                                    key={`${playerKey}-${activeSourceId}-${episode}-${season}`}
+                                    key={playerIdentity}
                                     src={embedUrl}
-                                    onLoad={() => setIsIframeLoading(false)}
+                                    onLoad={() => setLoadedPlayerIdentity(playerIdentity)}
                                     className={cn(
                                         "h-full w-full transition-opacity duration-1000",
                                         isIframeLoading ? "opacity-0" : "opacity-100"
@@ -194,7 +207,7 @@ export function WatchPage() {
                                 </div>
 
                                 <div className="flex flex-wrap gap-2 md:gap-3">
-                                    {details?.genres?.map((g: any) => (
+                                    {details?.genres?.map((g: Genre) => (
                                         <button
                                             key={g.id}
                                             onClick={() => handleGenreClick(g.id, g.name)}
@@ -212,7 +225,7 @@ export function WatchPage() {
                             <div className="space-y-8">
                                 <h3 className="text-[10px] font-black uppercase tracking-[0.4em] text-white/20">Featured Cast</h3>
                                 <div className="space-y-5">
-                                    {credits?.cast?.slice(0, 5).map((person: any) => (
+                                    {credits?.cast?.slice(0, 5).map((person: CastMember) => (
                                         <button
                                             key={person.id}
                                             onClick={() => navigate(`/search?sid=${person.id}&sn=${encodeURIComponent(person.name)}`)}
@@ -250,7 +263,7 @@ export function WatchPage() {
                                 {isDropdownOpen && (
                                     <div className="absolute top-full left-0 w-full mt-2 bg-black border border-white/10 rounded-2xl overflow-hidden z-[60] shadow-2xl animate-in fade-in slide-in-from-top-2 duration-200">
                                         <div className="max-h-[300px] overflow-y-auto custom-scrollbar">
-                                            {details?.seasons?.filter((s: any) => s.season_number > 0).map((s: any) => (
+                                            {details?.seasons?.filter((s: Season) => s.season_number > 0).map((s: Season) => (
                                                 <button
                                                     key={s.id}
                                                     onClick={() => handleEpisodeClick(s.season_number, 1)}
@@ -276,7 +289,7 @@ export function WatchPage() {
                                         <div key={i} className="h-16 w-full bg-white/5 rounded-2xl animate-pulse" />
                                     ))
                                 ) : (
-                                    seasonData?.episodes?.map((ep: any) => (
+                                    seasonData?.episodes?.map((ep: Episode) => (
                                         <button
                                             key={ep.id}
                                             onClick={() => handleEpisodeClick(season, ep.episode_number)}
@@ -319,11 +332,11 @@ export function WatchPage() {
                                         </div>
                                         <div className="flex flex-col flex-1 min-w-0">
                                             <h4 className="text-sm font-black uppercase italic tracking-tighter leading-tight text-white/80 group-hover:text-accent transition-colors line-clamp-2">
-                                                {item.title || item.name}
+                                                {'title' in item ? item.title : item.name}
                                             </h4>
                                             <div className="flex items-center gap-2 mt-1">
                                                 <span className="text-[10px] font-black text-white/30 tracking-tighter">
-                                                    {(item.release_date || item.first_air_date)?.split('-')[0]}
+                                                    {('release_date' in item ? item.release_date : item.first_air_date)?.split('-')[0]}
                                                 </span>
                                                 <span className="w-1 h-1 rounded-full bg-white/10" />
                                                 <p className="text-[10px] font-black text-white/20 uppercase tracking-widest truncate">

@@ -15,11 +15,32 @@ export function SearchPage() {
     const mediaType = searchParams.get('type') as 'movie' | 'tv' | null;
     const debouncedQuery = useDebounce(query, 500);
 
-    const [results, setResults] = useState<Media[]>([]);
     const [page, setPage] = useState(1);
-    const [loading, setLoading] = useState(false);
-    const [fetchingMore, setFetchingMore] = useState(false);
-    const [hasMore, setHasMore] = useState(true);
+
+    const criteriaKey = `${debouncedQuery.trim()}|${genreId ?? ''}|${mediaType ?? ''}|${starId ?? ''}`;
+    const hasCriteria = Boolean(debouncedQuery.trim() || genreId || starId);
+
+    // Results carry the criteria they were fetched for, so "loading" and "stale"
+    // are derived instead of being set synchronously inside an effect.
+    const [fetched, setFetched] = useState<{ key: string; items: Media[]; hasMore: boolean }>({
+        key: '', items: [], hasMore: false,
+    });
+    const isCurrent = fetched.key === criteriaKey;
+    const results = isCurrent ? fetched.items : [];
+    const loading = hasCriteria && !isCurrent;
+    const hasMore = isCurrent && fetched.hasMore;
+
+    const [loadedPage, setLoadedPage] = useState(1);
+    const fetchingMore = loadedPage < page;
+
+    // Reset pagination when the criteria change. Adjusting state during render is
+    // React's recommended alternative to doing this in an effect.
+    const [prevCriteriaKey, setPrevCriteriaKey] = useState(criteriaKey);
+    if (prevCriteriaKey !== criteriaKey) {
+        setPrevCriteriaKey(criteriaKey);
+        setPage(1);
+        setLoadedPage(1);
+    }
 
     const observer = useRef<IntersectionObserver | null>(null);
     const lastElementRef = useCallback((node: HTMLDivElement) => {
@@ -35,16 +56,8 @@ export function SearchPage() {
 
     // Initial Search, Genre, or Star Discover
     useEffect(() => {
-        if (!debouncedQuery.trim() && !genreId && !starId) {
-            setResults([]);
-            setHasMore(false);
-            return;
-        }
-
-        setLoading(true);
-        setResults([]);
-        setPage(1);
-        setHasMore(true);
+        if (!hasCriteria) return;
+        let cancelled = false;
 
         const fetchInitial = starId
             ? getPersonCredits(starId)
@@ -54,32 +67,42 @@ export function SearchPage() {
 
         fetchInitial
             .then(res => {
-                setResults(res);
+                if (cancelled) return;
                 // For star credits, TMDB returns everything at once, so we disable load more
-                if (starId || res.length < 10) setHasMore(false);
+                setFetched({ key: criteriaKey, items: res, hasMore: !(starId || res.length < 10) });
             })
-            .finally(() => setLoading(false));
-    }, [debouncedQuery, genreId, mediaType, starId]);
+            .catch(() => {
+                if (!cancelled) setFetched({ key: criteriaKey, items: [], hasMore: false });
+            });
+
+        return () => { cancelled = true; };
+    }, [criteriaKey, hasCriteria, debouncedQuery, genreId, mediaType, starId]);
 
     // Fetch More
     useEffect(() => {
         if (page === 1 || (!debouncedQuery.trim() && !genreId)) return;
+        let cancelled = false;
 
-        setFetchingMore(true);
         const fetchMore = genreId && mediaType
             ? getByGenre(mediaType, parseInt(genreId), page)
             : searchMedia(debouncedQuery, page);
 
         fetchMore
             .then(res => {
-                if (res.length === 0) {
-                    setHasMore(false);
-                } else {
-                    setResults(prev => [...prev, ...res]);
-                }
+                if (cancelled) return;
+                setFetched(prev => {
+                    // A newer search landed while this page was in flight.
+                    if (prev.key !== criteriaKey) return prev;
+                    return res.length === 0
+                        ? { ...prev, hasMore: false }
+                        : { ...prev, items: [...prev.items, ...res] };
+                });
             })
-            .finally(() => setFetchingMore(false));
-    }, [page, debouncedQuery, genreId, mediaType]);
+            .catch(() => { /* keep whatever is already rendered */ })
+            .finally(() => { if (!cancelled) setLoadedPage(page); });
+
+        return () => { cancelled = true; };
+    }, [page, criteriaKey, debouncedQuery, genreId, mediaType]);
 
     return (
         <div className="max-w-7xl mx-auto px-4 pt-32 pb-12 min-h-screen">
