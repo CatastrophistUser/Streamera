@@ -142,14 +142,25 @@ Not yet done: the optional iframe `onError` auto-advance.
 - Optional resilience: iframe `onError` + a load timeout → auto-advance to the
   next provider.
 
-### Phase 1 — CI gate for auto-merge
+### Phase 1 — CI gate for auto-merge — ✅ DONE (settings pending)
 
-GitHub Actions workflow on any PR touching `providers.json`:
+Shipped as `.github/workflows/ci.yml`, running on every PR and push to `main`:
 
-1. Validate against the schema.
-2. `npm run build` + `npm run lint` — a bad config cannot ship.
+1. `yarn install --frozen-lockfile`, then assert the install did not rewrite
+   `yarn.lock` (yarn 1 prunes other-platform native binaries; see §10).
+2. `yarn validate:providers` — schema plus the rules draft-07 cannot express:
+   duplicate ids/labels, unknown placeholders, templates that resolve off the
+   declared host, non-https URLs, tv templates ignoring season/episode, and
+   `FALLBACK_PROVIDERS` drifting out of sync. All six are covered by negative
+   tests.
+3. `yarn lint` — the 22 pre-existing errors were fixed first, so lint can gate.
+4. `yarn build`, then assert `dist/providers.json` shipped.
 
 (No independent health-check re-run for now — deferred with §3.)
+
+Still to do by hand in the GitHub UI (cannot be scripted from here): branch
+protection on `main` requiring the `verify` check, and enabling "Allow
+auto-merge".
 
 Then: branch protection on `main` requires these checks; enable "Allow
 auto-merge"; agent PRs turn on auto-merge, so a green PR merges itself and Vercel

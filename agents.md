@@ -105,7 +105,8 @@ Note: embed-URL construction is **not** part of the TMDB layer. It lives in the 
 The playback source list is decoupled from the app bundle so it can change without a code edit.
 
 - [public/providers.json](public/providers.json) is the source of truth. It ships as a static asset, so it is fetched at runtime rather than inlined at build time.
-- [schema/providers.schema.json](schema/providers.schema.json) is the JSON Schema for that file. Validate against it before committing a provider change.
+- [schema/providers.schema.json](schema/providers.schema.json) is the JSON Schema for that file.
+- [scripts/validate-providers.mjs](scripts/validate-providers.mjs) enforces it plus the rules the schema cannot express. Run `yarn validate:providers` before committing a provider change; CI runs it on every PR.
 - [src/services/providers.ts](src/services/providers.ts) is the reader:
   - `loadProviders()` fetches `providers.json`, checks `version`, drops malformed entries, and caches the promise for the page session so repeated `WatchPage` mounts share one request.
   - On **any** failure (network, bad status, wrong version, empty list) it logs a warning and resolves to `FALLBACK_PROVIDERS` so the player still renders.
@@ -130,7 +131,7 @@ Supported placeholders: `{host}`, `{id}`, `{season}`, `{episode}`. Templates mus
 
 ### Notes
 - `id` is the selection key. Changing an existing `id` resets that source's selection for users; prefer editing `label`/`host`/templates in place.
-- The schema cannot express "ids must be unique" — check for duplicates separately when validating.
+- The schema cannot express uniqueness or cross-file rules; `yarn validate:providers` covers those (duplicate ids/labels, unknown placeholders, templates that leave the declared host, non-https URLs, tv templates ignoring season/episode, and `FALLBACK_PROVIDERS` drifting out of sync with `providers.json`).
 - One entry per host. An earlier hardcoded list had eight entries covering the same three hosts under different labels, so several buttons produced identical URLs; those duplicates were removed.
 
 ## Types
@@ -169,6 +170,16 @@ The app frequently uses runtime field checks such as `title in item` because TMD
 ## Shared Utilities
 - [src/utils/cn.ts](src/utils/cn.ts) merges class names with `clsx` and `tailwind-merge`.
 
+## Continuous Integration
+[.github/workflows/ci.yml](.github/workflows/ci.yml) runs on every pull request and on pushes to `main`:
+install (frozen lockfile) -> assert `yarn.lock` was not rewritten by the install -> `yarn validate:providers` -> `yarn lint` -> `yarn build` -> assert `dist/providers.json` shipped.
+
+The lockfile assertion exists because yarn 1 can prune optional native binaries for
+platforms other than the runner's, which still builds on Linux but breaks a clean
+install on macOS/Windows.
+
+`yarn lint` is a required check, so the lint baseline must stay at zero errors.
+
 ## Configuration
 - [vite.config.ts](vite.config.ts) sets:
   - `base: './'`
@@ -190,6 +201,7 @@ This project uses **yarn**. `yarn.lock` is the only lockfile that should be comm
 - `yarn build`
 - `yarn lint`
 - `yarn preview`
+- `yarn validate:providers`
 
 ## Environment
 Required client env var:
