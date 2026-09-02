@@ -6,7 +6,9 @@ import tseslint from 'typescript-eslint'
 import { defineConfig, globalIgnores } from 'eslint/config'
 
 export default defineConfig([
-  globalIgnores(['dist']),
+  // eve-agent is a separate project with its own toolchain (Node 24, its own
+  // tsconfig and deps). Keep it out of the site's lint so the two cannot couple.
+  globalIgnores(['dist', 'eve-agent']),
   {
     files: ['**/*.{ts,tsx}'],
     extends: [
