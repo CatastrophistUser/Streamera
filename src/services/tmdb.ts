@@ -77,28 +77,3 @@ export const getPersonCredits = async (id: string): Promise<Media[]> => {
 
 export const getImageUrl = (path: string, size: 'w300' | 'w780' | 'w1280' | 'original' = 'w300') =>
     path ? `${IMAGE_BASE_URL}/${size}${path}` : null;
-
-export const getEmbedUrl = (
-    type: 'movie' | 'tv',
-    id: string,
-    season?: number,
-    episode?: number,
-    source: string = 'vidsrc.xyz'
-) => {
-    if (source.includes('vidlink')) {
-        return type === 'movie'
-            ? `https://vidlink.pro/movie/${id}`
-            : `https://vidlink.pro/tv/${id}/${season || 1}/${episode || 1}`;
-    }
-
-    if (source.includes('vidsrcme.ru') || source.includes('vidsrc.pm')) {
-        return type === 'movie'
-            ? `https://${source}/embed/movie/${id}`
-            : `https://${source}/embed/tv/${id}/${season || 1}/${episode || 1}`;
-    }
-
-    if (type === 'movie') {
-        return `https://${source}/embed/movie/${id}`;
-    }
-    return `https://${source}/embed/tv/${id}/${season || 1}/${episode || 1}`;
-};

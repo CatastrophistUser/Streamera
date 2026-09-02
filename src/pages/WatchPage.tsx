@@ -1,25 +1,9 @@
 import { useParams, useSearchParams, Link, useNavigate } from 'react-router-dom';
-import { getEmbedUrl, getMediaDetails, getSeasonDetails, getSimilar, getCredits, getImageUrl } from '@/services/tmdb';
+import { getMediaDetails, getSeasonDetails, getSimilar, getCredits, getImageUrl } from '@/services/tmdb';
+import { buildEmbedUrl, loadProviders, FALLBACK_PROVIDERS } from '@/services/providers';
 import { useState, useEffect, useRef } from 'react';
 import { RefreshCw, ChevronDown, Check } from 'lucide-react';
 import { cn } from '@/utils/cn';
-
-type PlaybackSource = {
-    id: string;
-    label: string;
-    host: 'vidlink.pro' | 'vidsrcme.ru' | 'vidsrc.pm';
-};
-
-const SOURCES: PlaybackSource[] = [
-    { id: 'server-vip', label: 'Server VIP', host: 'vidlink.pro' },
-    { id: 'mirror-ultra', label: 'Ultra', host: 'vidsrcme.ru' },
-    { id: 'classic-multi', label: 'Multi', host: 'vidsrc.pm' },
-    { id: 'direct-vidlink', label: 'Direct', host: 'vidlink.pro' },
-    { id: 'fast-mirror', label: 'Fast', host: 'vidsrcme.ru' },
-    { id: 'stable-classic', label: 'Stable', host: 'vidsrc.pm' },
-    { id: 'classic-backup', label: 'Classic', host: 'vidlink.pro' },
-    { id: 'legacy-mirror', label: 'Legacy', host: 'vidsrcme.ru' },
-];
 
 export function WatchPage() {
     const { type, id } = useParams<{ type: 'movie' | 'tv'; id: string }>();
@@ -29,7 +13,8 @@ export function WatchPage() {
 
     const season = parseInt(searchParams.get('s') || '1');
     const episode = parseInt(searchParams.get('e') || '1');
-    const [activeSourceId, setActiveSourceId] = useState(SOURCES[0].id);
+    const [providers, setProviders] = useState(FALLBACK_PROVIDERS);
+    const [activeSourceId, setActiveSourceId] = useState(FALLBACK_PROVIDERS[0].id);
     const [isIframeLoading, setIsIframeLoading] = useState(true);
 
     const [details, setDetails] = useState<any>(null);
@@ -69,6 +54,17 @@ export function WatchPage() {
     }, [id, type, season]);
 
     useEffect(() => {
+        let cancelled = false;
+        loadProviders().then((list) => {
+            if (cancelled) return;
+            setProviders(list);
+            // The fetched list may have dropped the selected source; fall back to the first.
+            setActiveSourceId((current) => list.some((p) => p.id === current) ? current : list[0].id);
+        });
+        return () => { cancelled = true; };
+    }, []);
+
+    useEffect(() => {
         const handleClickOutside = (event: MouseEvent) => {
             if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
                 setIsDropdownOpen(false);
@@ -78,8 +74,8 @@ export function WatchPage() {
         return () => document.removeEventListener('mousedown', handleClickOutside);
     }, []);
 
-    const activeSource = SOURCES.find((source) => source.id === activeSourceId) ?? SOURCES[0];
-    const embedUrl = type && id ? getEmbedUrl(type, id, season, episode, activeSource.host) : '';
+    const activeSource = providers.find((source) => source.id === activeSourceId) ?? providers[0];
+    const embedUrl = type && id ? buildEmbedUrl(activeSource, type, id, season, episode) : '';
 
     const handleEpisodeClick = (s: number, e: number) => {
         setSearchParams({ s: s.toString(), e: e.toString() });
@@ -133,7 +129,7 @@ export function WatchPage() {
 
                     <div className="flex items-center gap-2 p-1 bg-black rounded-2xl border border-white/5 w-full md:w-fit shadow-2xl overflow-x-auto custom-scrollbar-hidden keep-dark">
                         <div className="flex items-center gap-2 min-w-max px-1 md:px-0">
-                            {SOURCES.map((src) => (
+                            {providers.map((src) => (
                                 <button
                                     key={src.id}
                                     onClick={() => setActiveSourceId(src.id)}

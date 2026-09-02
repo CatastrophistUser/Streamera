@@ -12,6 +12,10 @@ dist
 dist-ssr
 *.local
 
+# This project uses yarn. yarn.lock is the only lockfile that should be committed.
+package-lock.json
+pnpm-lock.yaml
+
 # Editor directories and files
 .vscode/*
 !.vscode/extensions.json
@@ -25,3 +29,7 @@ dist-ssr
 .env
 .env.local
 .env.*
+
+# Claude Code local state
+.claude/settings.local.json
+.claude/*.tmp.*

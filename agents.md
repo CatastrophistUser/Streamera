@@ -73,6 +73,7 @@ Behavior:
 - Loads TMDB details, similar titles, and credits for the selected media item.
 - For TV shows, also loads season data and supports season/episode switching.
 - Renders an embedded iframe player using a selectable set of third-party source hosts.
+- The source list is **not hardcoded**: it is fetched at mount from `public/providers.json` via `loadProviders()`. See "Playback Providers" below.
 - Includes genre navigation and cast navigation back into search.
 
 Important note:
@@ -97,7 +98,40 @@ Exported helpers:
 - `getCredits`
 - `getPersonCredits`
 - `getImageUrl`
-- `getEmbedUrl`
+
+Note: embed-URL construction is **not** part of the TMDB layer. It lives in the provider layer below.
+
+## Playback Providers
+The playback source list is decoupled from the app bundle so it can change without a code edit.
+
+- [public/providers.json](public/providers.json) is the source of truth. It ships as a static asset, so it is fetched at runtime rather than inlined at build time.
+- [schema/providers.schema.json](schema/providers.schema.json) is the JSON Schema for that file. Validate against it before committing a provider change.
+- [src/services/providers.ts](src/services/providers.ts) is the reader:
+  - `loadProviders()` fetches `providers.json`, checks `version`, drops malformed entries, and caches the promise for the page session so repeated `WatchPage` mounts share one request.
+  - On **any** failure (network, bad status, wrong version, empty list) it logs a warning and resolves to `FALLBACK_PROVIDERS` so the player still renders.
+  - `FALLBACK_PROVIDERS` is a hardcoded mirror of `providers.json` (currently an exact copy). Keep it in sync when entries change.
+  - `buildEmbedUrl(provider, type, id, season, episode)` fills the provider's URL template.
+- [src/types/providers.ts](src/types/providers.ts) defines `Provider` and `ProvidersConfig`.
+
+### Provider entry shape
+Each entry carries its own URL templates, so **adding a host requires no code change** — only a `providers.json` edit:
+
+```json
+{
+  "id": "server-vip",
+  "label": "Server VIP",
+  "host": "vidlink.pro",
+  "movie": "https://{host}/movie/{id}",
+  "tv": "https://{host}/tv/{id}/{season}/{episode}"
+}
+```
+
+Supported placeholders: `{host}`, `{id}`, `{season}`, `{episode}`. Templates must be `https://` and must contain `{id}`.
+
+### Notes
+- `id` is the selection key. Changing an existing `id` resets that source's selection for users; prefer editing `label`/`host`/templates in place.
+- The schema cannot express "ids must be unique" — check for duplicates separately when validating.
+- One entry per host. An earlier hardcoded list had eight entries covering the same three hosts under different labels, so several buttons produced identical URLs; those duplicates were removed.
 
 ## Types
 [src/types/tmdb.ts](src/types/tmdb.ts) defines the shared media shapes.
@@ -108,6 +142,8 @@ Exported helpers:
 - `TMDBResponse<T>`
 
 The app frequently uses runtime field checks such as `title in item` because TMDB search results are mixed media.
+
+[src/types/providers.ts](src/types/providers.ts) defines the playback provider shapes: `Provider` and `ProvidersConfig`.
 
 ## Hooks
 - [src/hooks/useTheme.ts](src/hooks/useTheme.ts) is a thin context accessor and throws if used outside `ThemeProvider`.
@@ -142,13 +178,18 @@ The app frequently uses runtime field checks such as `title in item` because TMD
 - [eslint.config.js](eslint.config.js) uses the flat config with React hooks and React refresh rules.
 - [vercel.json](vercel.json) rewrites `/tmdb/:path*` to TMDB and routes all other paths to `index.html`.
 - [public/robots.txt](public/robots.txt) disallows crawling.
+- [public/providers.json](public/providers.json) is runtime config, not build config — see "Playback Providers".
+- [eve-automation-plan.md](eve-automation-plan.md) is the roadmap for automating provider updates (Eve agent + CI auto-merge). The provider decoupling above is Phase 0 of that plan.
 
 ## Commands
-- `npm install`
-- `npm run dev`
-- `npm run build`
-- `npm run lint`
-- `npm run preview`
+This project uses **yarn**. `yarn.lock` is the only lockfile that should be committed;
+`package-lock.json` and `pnpm-lock.yaml` are gitignored.
+
+- `yarn install`
+- `yarn dev`
+- `yarn build`
+- `yarn lint`
+- `yarn preview`
 
 ## Environment
 Required client env var:
@@ -160,6 +201,7 @@ Required client env var:
 - There is no persistent theme preference yet.
 - Several page and service responses use `any` in localized places, especially in the watch/search flow where TMDB response shapes vary.
 - Search and watch flows assume poster/backdrop paths may be missing, so image helpers often return `null` and callers fall back to empty strings.
+- `WatchPage` renders `FALLBACK_PROVIDERS` on first paint and swaps in the fetched list when it arrives, so the source buttons are never empty. If the fetched list no longer contains the selected `id`, the selection resets to the first entry.
 - The current design relies on dark glassmorphism styling with a light-mode override layer in global CSS.
 
 ## Suggested Working Order For Future Changes

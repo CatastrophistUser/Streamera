@@ -1,0 +1,59 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://streamera.local/schema/providers.schema.json",
+  "title": "Streamera playback providers",
+  "description": "Source of truth for the playback provider list rendered by WatchPage. Edited by hand or by the provider-sentinel agent; validated in CI before merge.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["version", "providers"],
+  "properties": {
+    "version": {
+      "type": "integer",
+      "const": 1,
+      "description": "Config schema version. Bump only alongside a reader change in src/services/providers.ts."
+    },
+    "providers": {
+      "type": "array",
+      "minItems": 1,
+      "maxItems": 24,
+      "items": { "$ref": "#/definitions/provider" }
+    }
+  },
+  "definitions": {
+    "provider": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "label", "host", "movie", "tv"],
+      "properties": {
+        "id": {
+          "type": "string",
+          "pattern": "^[a-z0-9][a-z0-9-]*$",
+          "minLength": 2,
+          "maxLength": 40,
+          "description": "Stable slug. Used as the React key and the selected-source identifier; changing it resets a user's selection."
+        },
+        "label": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 24,
+          "description": "Text shown on the source button."
+        },
+        "host": {
+          "type": "string",
+          "pattern": "^[a-z0-9]([a-z0-9-]*[a-z0-9])?(\\.[a-z0-9]([a-z0-9-]*[a-z0-9])?)+$",
+          "description": "Bare hostname, no scheme and no trailing slash. Substituted into {host}."
+        },
+        "movie": {
+          "type": "string",
+          "pattern": "^https://.*\\{id\\}",
+          "description": "Movie embed URL template. Must be https and contain {id}. Supports {host} and {id}."
+        },
+        "tv": {
+          "type": "string",
+          "pattern": "^https://.*\\{id\\}",
+          "description": "TV embed URL template. Must be https and contain {id}. Supports {host}, {id}, {season} and {episode}."
+        }
+      }
+    }
+  }
+}

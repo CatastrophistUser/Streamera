@@ -1,0 +1,26 @@
+{
+  "version": 1,
+  "providers": [
+    {
+      "id": "server-vip",
+      "label": "Server VIP",
+      "host": "vidlink.pro",
+      "movie": "https://{host}/movie/{id}",
+      "tv": "https://{host}/tv/{id}/{season}/{episode}"
+    },
+    {
+      "id": "mirror-ultra",
+      "label": "Ultra",
+      "host": "vidsrcme.ru",
+      "movie": "https://{host}/embed/movie/{id}",
+      "tv": "https://{host}/embed/tv/{id}/{season}/{episode}"
+    },
+    {
+      "id": "classic-multi",
+      "label": "Multi",
+      "host": "vidsrc.pm",
+      "movie": "https://{host}/embed/movie/{id}",
+      "tv": "https://{host}/embed/tv/{id}/{season}/{episode}"
+    }
+  ]
+}
