@@ -190,7 +190,15 @@ install on macOS/Windows.
 - [vercel.json](vercel.json) rewrites `/tmdb/:path*` to TMDB and routes all other paths to `index.html`.
 - [public/robots.txt](public/robots.txt) disallows crawling.
 - [public/providers.json](public/providers.json) is runtime config, not build config — see "Playback Providers".
-- [eve-automation-plan.md](eve-automation-plan.md) is the roadmap for automating provider updates (Eve agent + CI auto-merge). The provider decoupling above is Phase 0 of that plan.
+- [eve-automation-plan.md](eve-automation-plan.md) is the roadmap for automating provider updates; [context.md](context.md) is the working log of that effort (phase status, branches, decisions, outstanding manual steps). The provider decoupling above is Phase 0 of that plan and is on `main`.
+
+## Provider Automation (Eve agent)
+The goal is a bot that checks the playback providers daily and swaps out dead ones by committing to `public/providers.json` directly — no PR, no auto-merge (the repo is private with one committer). Status:
+
+- **Phase 0 — decouple providers** (this section's `providers.json` layer): ✅ on `main`.
+- **Phase 1 — CI gate**: ✅ on `main` (PR #1). [.github/workflows/ci.yml](.github/workflows/ci.yml) + `scripts/validate-providers.mjs` (`yarn validate:providers`) run on every PR and push. Branch protection is **not enforced** (private repo on a personal account), so CI reports but does not block.
+- **Phase 2 — the Eve agent**: 🔶 branch `eve-provider-agent` (not merged). Adds `eve-agent/`, a standalone [Eve](https://vercel.com/eve) project (Node 24, its own `package.json`/`tsconfig`, excluded from this repo's eslint). Tools: `read_providers`, `check_provider` (returns evidence, not a verdict), `update_providers` (re-validates, refuses no-ops and empty lists, commits to `main`), `notify` (ntfy). Daily schedule `0 6 * * *` UTC. Model: a free `minimax/*` AI Gateway model.
+- Deploying the agent needs the user to supply a GitHub token + ntfy topic and run `eve deploy`. See [context.md](context.md) → "Outstanding manual steps".
 
 ## Commands
 This project uses **yarn**. `yarn.lock` is the only lockfile that should be committed;
@@ -211,7 +219,7 @@ Required client env var:
 ## Implementation Notes
 - The app uses `HashRouter`, so route changes are hash-based even though the Vercel config includes an SPA fallback.
 - There is no persistent theme preference yet.
-- Several page and service responses use `any` in localized places, especially in the watch/search flow where TMDB response shapes vary.
+- The lint baseline is **0 errors** and CI runs `yarn lint` — keep it there. TMDB response shapes are typed in [src/types/tmdb.ts](src/types/tmdb.ts) (`MediaDetails`, `SeasonDetails`, `Credits`, etc.); async page state is derived rather than set inside effects.
 - Search and watch flows assume poster/backdrop paths may be missing, so image helpers often return `null` and callers fall back to empty strings.
 - `WatchPage` renders `FALLBACK_PROVIDERS` on first paint and swaps in the fetched list when it arrives, so the source buttons are never empty. If the fetched list no longer contains the selected `id`, the selection resets to the first entry.
 - The current design relies on dark glassmorphism styling with a light-mode override layer in global CSS.
@@ -220,4 +228,4 @@ Required client env var:
 1. Check the route and page that own the behavior.
 2. Follow the page into the TMDB service helper if the issue is data-related.
 3. Update shared theme or layout components only if the behavior is cross-cutting.
-4. Run `npm run build` or `npm run lint` after changes that touch routing, hooks, or the service layer.
+4. Run `yarn build` and `yarn lint` after changes that touch routing, hooks, or the service layer. If you touched `public/providers.json` or its schema, also run `yarn validate:providers`.
